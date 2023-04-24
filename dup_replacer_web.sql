@@ -44,7 +44,10 @@ CREATE TABLE dups_parent (
 CREATE TABLE dups (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   dups_parent_id INTEGER NOT NULL,
-  content TEXT NOT NULL,
+  content_group_id INTEGER NOT NULL,
+  content_1 TEXT NOT NULL,
+  content_2 TEXT NOT NULL,
+  content_3 TEXT NOT NULL,
   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 );
 -- user_permissionにデータを2レコード挿入する

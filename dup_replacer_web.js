@@ -1,3 +1,8 @@
+// DROP TABLE IF EXISTS user_permission;
+// DROP TABLE IF EXISTS users;
+// DROP TABLE IF EXISTS dups_parent;
+// DROP TABLE IF EXISTS dups;
+
 // CREATE TABLE user_permission (
 //   id INTEGER PRIMARY KEY,
 
@@ -22,20 +27,22 @@
 
 // CREATE TABLE dups_parent (
 //   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//     user_id INTEGER NOT NULL,
+//   user_id INTEGER NOT NULL,
 //   created_at DATETIME NOT NULL,
 //   updated_at DATETIME NOT NULL,
-//     FOREIGN KEY (user_id) REFERENCES users(id)
+//   FOREIGN KEY (user_id) REFERENCES users(id)
 // );
 
 
 // CREATE TABLE dups (
 //   id INTEGER PRIMARY KEY AUTOINCREMENT,
 //   dups_parent_id INTEGER NOT NULL,
-//   content TEXT NOT NULL,
-//     FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+//   content_group_id INTEGER NOT NULL,
+//   content_1 TEXT NOT NULL,
+//   content_2 TEXT NOT NULL,
+//   content_3 TEXT NOT NULL,
+//   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 // );
-
 // INSERT INTO user_permission (id, permission, readable, writable, deletable, created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, DATETIME('now'), DATETIME('now'));
 // INSERT INTO user_permission (id, permission, readable, writable, deletable, created_at, updated_at) VALUES (2, 'user', 1, 1, 1, DATETIME('now'), DATETIME('now'));
 
@@ -46,16 +53,16 @@
 
 const express = require('express');
 const sqlite = require('better-sqlite3');
-const db = new sqlite('dup.sqlite3');
+const db = new sqlite('../dup.sqlite3');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 const cors = require('cors');
 app.use(cors());
 const port = 8000;
-app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
+app.listen(port, "0.0.0.0", () => console.log(`App listening!!! at http://localhost:${port}`) );
 
-
+const now = () => new Date().toISOString();
 const true_if_within_4000_characters_and_not_empty = (str) => str.length > 2 && str.length <= 4000 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
 
 // '/read_dups_parent'というGETのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsとそれを紐づけるuserを取得する。
@@ -63,7 +70,7 @@ const true_if_within_4000_characters_and_not_empty = (str) => str.length > 2 && 
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.get('/read_dups_parent', (req, res) => {
     try {
-    const rows = db.prepare('SELECT dups_parent.id AS dups_parent_id, dups_parent.user_id AS user_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, dups.id AS dups_id, dups.content AS dups_content, users.name AS user_name FROM dups_parent LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id LEFT JOIN users ON dups_parent.user_id = users.id').all();
+        const rows = db.prepare('SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.name AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3 FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id').all();
     res.json(rows);
     } catch (error) {
         console.log(error);
@@ -77,24 +84,24 @@ const error_response = (res, error_message) => res.status(400).json({ error: err
 
 // '/insert_dup'というPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを作成する。
 app.post('/insert_dup', (req, res) => {
+    console.log(req.body.B_C_list);
     try {
-    // content_1, content_2, content_3はそれぞれがは配列で["abc", "def", "ghi"]のように入ってくる
-    const { content_1, content_2, content_3, name, password } = JSON.parse(req.body);
-    [content_1, content_2, content_3].forEach((content) => {
-        content.forEach((str) => {
-            true_if_within_4000_characters_and_not_empty(str) ? null : error_response(res, '4000文字以内で入力して');
-        });
-        true_if_within_4000_characters_and_not_empty(content.join("")) ? null : error_response(res, '4000文字以内で入力して');
+    req.body.B_C_list.forEach((EACH_CONTENT) => {
+        true_if_within_4000_characters_and_not_empty(EACH_CONTENT.join("")) ? null : error_response(res, '4000文字以内で入力して');
     });
-    const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.role_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
+    const user_with_permission = db.prepare('SELECT * FROM users LEFT JOIN user_permission ON users.user_permission_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password);
     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
-    db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, DATETIME("now"), DATETIME("now"))').run(user_with_permission.id) ? null : error_response(res, 'dups_parentにuser_idを追加できませんでした');
-    const dups_parent_id = db.prepare('SELECT id FROM dups_parent ORDER BY id DESC LIMIT 1').get().id ? null : error_response(res, 'dups_parent_idを取得できませんでした');
-    [content_1, content_2, content_3].forEach((content) => {
-        content.forEach((str) => {
-            // db.prepare('INSERT INTO dups (dups_parent_id, content, created_at, updated_at) VALUES (?, ?, DATETIME("now"), DATETIME("now"))').run(dups_parent_id, str) ? null : error_response(res, 'dupsにcontentを追加できませんでした');
-            db.prepare('INSERT INTO dups (dups_parent_id, content, created_at, updated_at) VALUES (?, ?, DATETIME("now"), DATETIME("now"))').run(dups_parent_id, str);
-        });
+    db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, ?, ?)').run(user_with_permission.id, now(), now()) ? null : error_response(res, 'dups_parentに追加できませんでした');
+    const dups_parent_id = db.prepare('SELECT id FROM dups_parent ORDER BY id DESC LIMIT 1').get().id;
+    // console.log(dups_parent_id);
+    req.body.B_C_list.forEach((EACH_CONTENT, CONTENT_GROUP_ID) => {
+            // console.log("dups_parent_id", dups_parent_id);
+            // console.log("CONTENT_GROUP_ID", CONTENT_GROUP_ID);
+            // console.log("EACH_CONTENT[0]", EACH_CONTENT[0]);
+            // console.log("EACH_CONTENT[1]", EACH_CONTENT[1]);
+            // console.log("EACH_CONTENT[2]", EACH_CONTENT[2]);
+            // console.log("now()", now());
+        db.prepare('INSERT INTO dups (dups_parent_id, content_group_id, content_1, content_2, content_3) VALUES (?, ?, ?, ?, ?)').run(dups_parent_id, CONTENT_GROUP_ID, EACH_CONTENT[0], EACH_CONTENT[1], EACH_CONTENT[2]) ? null : error_response(res, 'dupsに追加できませんでした');
     });
     res.json({message: 'success'});
     } catch (error) {
@@ -117,7 +124,6 @@ app.post('/delete_dup', (req, res) => {
     db.prepare('DELETE FROM dups WHERE dups_parent_id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dupsを削除できませんでした');
     db.prepare('DELETE FROM dups_parent WHERE id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dups_parentを削除できませんでした');
     res.json({message: 'success'});
-
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
