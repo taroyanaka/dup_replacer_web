@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dup_replacer</title>
+<script src="./vue@3.2.36.global.prod.js"></script>
+<script src="./localforage@1.10.0.js"></script>
+<script src="./ramda.@0.28.0.js"></script>
+<style>
+ul{
+list-style-type: none;
+}
+.app {
+display: grid;
+/* grid-auto-columns: auto; */
+/* grid-template-rows: 3rem auto 1fr; */
+grid-gap: 0px;
+grid-template-areas:
+    "button"
+    "textarea"
+    "list"
+    "duplicate_button"
+    ;
+}
+textarea{
+    width: 100%;
+    max-height: 30rem; /* 最大高さ */
+}
+.textarea_childs{
+    display: grid;
+    /* grid-template-columns: 1fr 1fr 1fr 1fr; */
+    /* grid-template-rows: calc(100% + 3rem) calc(100% + 3rem) calc(100% + 3rem) calc(100% + 3rem); */
+    /* grid-gap: 0px; */
+    grid-template-areas:
+    'a b d'
+    'a c d';
+}
+.a{
+    grid-area: a;
+    /* height: 100%; */
+}
+.b{
+    grid-area: b;
+}
+.c{
+    grid-area: c;
+}
+.d{
+    grid-area: d;
+    /* height: 100%; */
+}
+.duplicate_button{
+    grid-area: duplicate_button;
+}
+
+
+
+/* .button_parent{
+display: grid;
+grid-area: button;
+grid-template-rows: 1fr;
+grid-template-columns: repeat(3, 1fr);
+}
+.textarea_parent {
+display: grid;
+grid-auto-rows: auto;
+grid-template-columns: 2fr 1fr 1fr 2fr;
+grid-gap: 0px;
+}
+*/
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="button_parent">
+<input type="button" value="save_data_to_all_save" @click="save_data_to_all_save">
+<!-- vue.jsのチェックボックスのデータのバインドの仕方のサンプルのHTML-->
+in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="in_reference_to_INDEX_0_apply_check">
+<!-- <input type="checkbox" name="in_reference_to_INDEX_0_apply_check" id="in_reference_to_INDEX_0_apply_check" v-model="in_reference_to_INDEX_0_apply_check"> -->
+
+
+</div>
+
+<div class="textarea_parent">
+<!-- <div class="tag">
+<input type="text" name="tag_input" class="tag_input">
+<ul>
+<li v-for="(item, index) in tag">
+{{item}}
+</li>
+</ul>
+</div> -->
+
+<div v-for="(DATA, INDEX) in B_C_list" class="textarea_childs">
+    <textarea name="a" class="a" v-model="DATA[0]"></textarea>
+
+    <textarea name="b" class="b" v-model="DATA[1]"></textarea>
+    <textarea name="c" class="c" v-model="DATA[2]"></textarea>
+
+    <textarea name="d" class="d" v-model="DATA[3]"></textarea>
+</div>
+<button @click="duplicate_button">duplicate_button</button>
+
+<textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
+<button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
+
+
+</div>
+
+<input type="button" value="sort_by_when" @click="sort_by_when">
+<input type="button" value="sort_by_rating" @click="sort_by_rating">
+<input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text">
+<ul>
+<li v-for="(item, index) in all_save">
+<button @click="save_data_set(index)">save_data_set</button>
+{{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+<p>{{ item }}</p>
+<button @click="save_data_delete(index)">save_data_delete</button>
+</li>
+</ul>
+
+</div>
+</body>
+<script>
+const app = Vue.createApp({
+data() {
+return {
+    B_C_list:[
+        ['aaBBccDD', 'aa\nEF\nHI', 'XX\nef\nhi', ''],
+    ],
+    content_1: [],
+    content_2: [],
+    content_3: [],
+    rating: 0,
+    when: null,
+    save_data: [],
+    all_save: [],
+    sort_by: 'asc',
+    filter_text: '',
+    temporary_all_save_for_filter: [],
+
+    all_result: '',
+    in_reference_to_INDEX_0_apply_check: true,
+    name: 'name1',
+    password: 'password1',
+}
+},
+watch: {
+   B_C_list: {
+     handler() {
+        this.in_reference_to_INDEX_0_apply();
+        this.make_result();
+     },
+     deep: true
+   },
+},
+mounted() {
+this.save_data_load();
+this.make_result();
+this.auto_resize();
+},
+beforeUpdated() {
+},
+updated() {
+},
+methods: {
+refresh_save_data() {
+    this.save_data = [
+        this.B_C_list,
+        this.rating,
+        this.when,
+    ];
+},
+make_result(){
+    this.when = (new Date()).toLocaleString('en');
+    JSON.parse(JSON.stringify(this.B_C_list)).map((B_C)=>{
+        let tmp = B_C[0];
+        R.zip(
+            B_C[1].split("\n"),
+            B_C[2].split("\n"))
+                .forEach(V=> tmp = tmp.replaceAll(V[0], V[1]) );
+        return tmp;
+    }).forEach((item, index)=>this.B_C_list[index][3] = item);
+    this.all_result = this.B_C_list.map((item)=>item[3]).join("\n");
+},
+async rating_up(INDEX){
+    this.all_save[INDEX][1]++;
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async rating_down(INDEX){
+    this.all_save[INDEX][1]--;
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async save_data_to_all_save(){
+    this.refresh_save_data();
+    this.all_save.push(this.save_data);
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async save_data_load() {
+    this.all_save = JSON.parse(await localforage.getItem('dup_replacer_web')) || [];
+    this.temporary_all_save_for_filter = this.all_save;
+},
+save_data_set(INDEX){
+    console.log(INDEX);
+    [
+        this.B_C_list,
+        this.rating,
+        this.when,
+    ] = this.all_save[INDEX];
+},
+async save_data_delete(INDEX){
+    if (window.confirm("Do you really want to delete??🦖\n本当に削除する？?🦕")) {
+        this.all_save.splice(INDEX, 1);
+        await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+    }
+},
+sort_by_when(){
+    this.all_save.sort((a, b) => {
+        time_A = new Date(a[2]);
+        time_B = new Date(b[2]);
+        return this.sort_by === 'asc' ? time_A - time_B : time_B - time_A;
+    });
+    this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
+},
+sort_by_rating(){
+    this.all_save.sort((a, b) => {
+        return this.sort_by === 'asc' ? a[1] - b[1] : b[1] - a[1];
+    });
+    this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
+},
+filter_by_text(){
+    this.all_save = this.temporary_all_save_for_filter.filter(VAL => {
+        return VAL.join("").includes(this.filter_text);
+    });
+    this.filter_text === "" ? this.all_save = this.temporary_all_save_for_filter : null;
+},
+auto_resize(){
+    document.querySelectorAll('textarea').forEach(textarea=>{
+        // textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    });
+},
+duplicate_button(){
+    const copy = R.clone(this.B_C_list[0]);
+    this.B_C_list.push(copy);
+},
+in_reference_to_INDEX_0_apply(){
+    this.in_reference_to_INDEX_0_apply_check === true ? this.B_C_list.forEach((item, index)=>item[0] = this.B_C_list[0][0]) : null;
+},
+
+
+
+a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck() {
+    const copyTextToClipboard = (text) => {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        range.selectNodeContents(textarea);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textarea.setSelectionRange(0, 999999);
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        console.log('Text copied to clipboard');
+    }
+
+    const copyToClipboard = () => {
+        try {
+            navigator.clipboard ? navigator.clipboard.writeText(this.$refs.all_result_textarea.value).then(() => console.log('Text copied to clipboard')).catch(() => {
+            navigator.userAgent.match(/ipad|iphone/i) ? copyTextToClipboard(this.$refs.all_result_textarea.value) : (this.$refs.all_result_textarea.select() && document.execCommand('copy'));
+            }) : (navigator.userAgent.match(/ipad|iphone/i) ? copyTextToClipboard(this.$refs.all_result_textarea.value) : (this.$refs.all_result_textarea.select() && document.execCommand('copy') && console.log('Text copied to clipboard')));
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    }
+    copyToClipboard()
+},
+
+
+
+
+// app.post('/insert_dup', (req, res) => {
+//     try {
+//     const { content_1, content_2, content_3, name, password } = JSON.parse(req.body);
+//     [content_1, content_2, content_3].forEach((content) => {
+//         content.forEach((str) => {
+//             true_if_within_4000_characters_and_not_empty(str) ? null : error_response(res, '4000文字以内で入力して');
+//         });
+//         true_if_within_4000_characters_and_not_empty(content.join("")) ? null : error_response(res, '4000文字以内で入力して');
+//     });
+//     const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.role_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
+//     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
+//     db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, DATETIME("now"), DATETIME("now"))').run(user_with_permission.id) ? null : error_response(res, 'dups_parentにuser_idを追加できませんでした');
+//     const dups_parent_id = db.prepare('SELECT id FROM dups_parent ORDER BY id DESC LIMIT 1').get().id ? null : error_response(res, 'dups_parent_idを取得できませんでした');
+//     [content_1, content_2, content_3].forEach((content) => {
+//         content.forEach((str) => {
+//             db.prepare('INSERT INTO dups (dups_parent_id, content, created_at, updated_at) VALUES (?, ?, DATETIME("now"), DATETIME("now"))').run(dups_parent_id, str);
+//         });
+//     });
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
+
+collect_B_C_list_each_index_0_to_content_1(){
+    this.content_1 = [];
+    this.B_C_list.forEach((B_C, index) => this.content_1.push(B_C[0]) );
+},
+collect_B_C_list_each_index_1_to_content_2(){
+    this.content_2 = [];
+    this.B_C_list.forEach((B_C, index) => this.content_2.push(B_C[1]) );
+},
+collect_B_C_list_each_index_2_to_content_3(){
+    this.content_3 = [];
+    this.B_C_list.forEach((B_C, index) => this.content_3.push(B_C[2]) );
+},
+collect_each_content(){
+    this.collect_B_C_list_each_index_0_to_content_1();
+    this.collect_B_C_list_each_index_1_to_content_2();
+    this.collect_B_C_list_each_index_2_to_content_3();
+},
+fetch_insert_dup(){
+    this.collect_each_content();
+    fetch('/insert_dup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            content_1: this.content_1,
+            content_2: this.content_2,
+            content_3: this.content_3,
+            name: this.name,
+            password: this.password
+        })
+    }).then((response) => {
+        return response.json();
+    }).then((json) => {
+        console.log(json);
+    });
+},
+
+
+
+}}).mount('.app');
+</script>
+</html>

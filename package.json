@@ -1,0 +1,17 @@
+{
+  "name": "dup_replacer_web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dup_replacer_web.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^8.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "validator": "^13.9.0"
+  }
+}
