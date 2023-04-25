@@ -126,7 +126,74 @@ in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="
 </ul>
 
 
-<span>{{ response_message }}</span>
+<!--
+    {
+    "6": [
+        {
+            "dups_parent_id": 6,
+            "dups_parent_created_at": "2023-04-25T09:41:14.896Z",
+            "dups_parent_updated_at": "2023-04-25T09:41:14.896Z",
+            "user_name": "name1",
+            "dups_content_group_id": 0,
+            "dups_content_1": "aaBBccDD",
+            "dups_content_2": "aa\nEF\nHI",
+            "dups_content_3": "XX\nef\nhi"
+        }
+    ],
+    "7": [
+        {
+            "dups_parent_id": 7,
+            "dups_parent_created_at": "2023-04-25T09:41:18.743Z",
+            "dups_parent_updated_at": "2023-04-25T09:41:18.743Z",
+            "user_name": "name1",
+            "dups_content_group_id": 0,
+            "dups_content_1": "aaBBccDD",
+            "dups_content_2": "aa\nEF\nHI",
+            "dups_content_3": "XX\nef\nhi"
+        },
+        {
+            "dups_parent_id": 7,
+            "dups_parent_created_at": "2023-04-25T09:41:18.743Z",
+            "dups_parent_updated_at": "2023-04-25T09:41:18.743Z",
+            "user_name": "name1",
+            "dups_content_group_id": 1,
+            "dups_content_1": "aaBBccDD",
+            "dups_content_2": "aa\nEF\nHI",
+            "dups_content_3": "XX\nef\nhi"
+        },
+        {
+            "dups_parent_id": 7,
+            "dups_parent_created_at": "2023-04-25T09:41:18.743Z",
+            "dups_parent_updated_at": "2023-04-25T09:41:18.743Z",
+            "user_name": "name1",
+            "dups_content_group_id": 2,
+            "dups_content_1": "aaBBccDD",
+            "dups_content_2": "aa\nEF\nHI",
+            "dups_content_3": "XX\nef\nhi"
+        }
+    ]
+} -->
+<!-- 上記のようなデータをulとliとdivとspanで表示する  -->
+<ul>
+<li v-for="(item, index) in response_message">
+    <button>copy</button>
+    <template v-for="(ITEM_1, INDEX_1) in item">
+    <div>
+        <div>{{ INDEX_1 }}</div>
+        <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
+        <div><span>dups_parent_created_at: </span><span>{{ ITEM_1.dups_parent_created_at }}</span></div>
+        <!-- <div><span>dups_parent_updated_at: </span><span>{{ ITEM_1.dups_parent_updated_at }}</span></div> -->
+        <div><span>user_name: </span><span>{{ ITEM_1.user_name }}</span></div>
+        <div><span>dups_content_group_id: </span><span>{{ ITEM_1.dups_content_group_id }}</span></div>
+        <div><span>dups_content_1: </span><span>{{ ITEM_1.dups_content_1 }}</span></div>
+        <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
+        <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
+    </div>
+    </template>
+</li>
+</ul>
+
+
 
 
 </div>
@@ -261,7 +328,9 @@ in_reference_to_INDEX_0_apply(){
     this.in_reference_to_INDEX_0_apply_check === true ? this.B_C_list.forEach((item, index)=>item[0] = this.B_C_list[0][0]) : null;
 },
 
-
+to_ary(it){
+    return JSON.parse(JSON.stringify(it));
+},
 
 a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck() {
     const copyTextToClipboard = (text) => {
@@ -333,6 +402,8 @@ async fetch_read_dups_parent(){
     this.response_message = data;
     console.log(data);
 },
+
+
 // delete_all_dups_and_dups_parentというPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを全て削除する。
 // app.post('/delete_all_dups_and_dups_parent', (req, res) => {
 //     try {
