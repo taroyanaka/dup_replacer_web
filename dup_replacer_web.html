@@ -111,7 +111,7 @@ in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="
 <button @click="fetch_insert_dup">fetch_insert_dup</button>
 <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
 
-<button @click="fetched_data_localforage">fetched_data_localforage</button>
+<!-- <button @click="fetched_data_localforage">fetched_data_localforage</button> -->
 
 </div>
 
@@ -178,7 +178,8 @@ in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="
 <!-- 上記のようなデータをulとliとdivとspanで表示する  -->
 <ul>
 <li v-for="(item, index) in response_message">
-    <button>copy</button>
+    <!-- <button>copy</button> -->
+    <button @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
     <div>
         <div>{{ INDEX_1 }}</div>
@@ -444,10 +445,16 @@ data_convert_for_localforage(data) {
     // return [R.values(contentGroups).concat(['']).flat(), 0, new Date().toLocaleString()];
     return [R.values(contentGroups).flat(), 0, new Date().toLocaleString()];
 },
-async fetched_data_localforage(){
+async fetched_data_localforage(INDEX){
+    console.log(INDEX);
+    console.log(typeof INDEX);
+const INDEX_STRING = (INDEX).toString();
+    console.log(INDEX_STRING);
+
     this.refresh_save_data();
     this.all_save.push(
-        this.data_convert_for_localforage(this.to_ary(this.response_message)['8'])
+        this.data_convert_for_localforage(this.to_ary(this.response_message)[INDEX_STRING])
+        // this.data_convert_for_localforage(this.to_ary(this.response_message)['8'])
     );
     await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
 },
