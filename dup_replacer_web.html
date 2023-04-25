@@ -433,6 +433,11 @@ async fetch_delete_all_dups_and_dups_parent(){
     console.log(data);
 },
 
+data_convert_for_localforage(data) {
+    const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3', ''])), R.groupBy(R.prop('dups_content_group_id'), data));
+    return [R.values(contentGroups), 0, new Date().toLocaleString()];
+},
+
 }}).mount('.app');
 </script>
 </html>
