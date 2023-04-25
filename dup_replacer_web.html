@@ -111,6 +111,8 @@ in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="
 <button @click="fetch_insert_dup">fetch_insert_dup</button>
 <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
 
+<button @click="fetched_data_localforage">fetched_data_localforage</button>
+
 </div>
 
 <input type="button" value="sort_by_when" @click="sort_by_when">
@@ -247,6 +249,7 @@ methods: {
 refresh_save_data() {
     this.save_data = [
         this.B_C_list,
+        // this.to_ary(this.B_C_list).map(V=>[V[0], V[1], V[2]]),
         this.rating,
         this.when,
     ];
@@ -284,6 +287,8 @@ save_data_set(INDEX){
     console.log(INDEX);
     [
         this.B_C_list,
+        // [this.B_C_list[0], this.B_C_list[1], this.B_C_list[2]],
+        // this.to_ary(this.B_C_list).map(V=>[V[0], V[1], V[2]]),
         this.rating,
         this.when,
     ] = this.all_save[INDEX];
@@ -434,8 +439,17 @@ async fetch_delete_all_dups_and_dups_parent(){
 },
 
 data_convert_for_localforage(data) {
-    const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3', ''])), R.groupBy(R.prop('dups_content_group_id'), data));
-    return [R.values(contentGroups), 0, new Date().toLocaleString()];
+    const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3'])), R.groupBy(R.prop('dups_content_group_id'), data));
+    // return [R.values(contentGroups), 0, new Date().toLocaleString()];
+    // return [R.values(contentGroups).concat(['']).flat(), 0, new Date().toLocaleString()];
+    return [R.values(contentGroups).flat(), 0, new Date().toLocaleString()];
+},
+async fetched_data_localforage(){
+    this.refresh_save_data();
+    this.all_save.push(
+        this.data_convert_for_localforage(this.to_ary(this.response_message)['8'])
+    );
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
 },
 
 }}).mount('.app');
