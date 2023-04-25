@@ -109,6 +109,7 @@ in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="
 <textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
 <button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
 <button @click="fetch_insert_dup">fetch_insert_dup</button>
+<button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
 
 </div>
 
@@ -332,8 +333,34 @@ async fetch_read_dups_parent(){
     this.response_message = data;
     console.log(data);
 },
-
-
+// delete_all_dups_and_dups_parentというPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを全て削除する。
+// app.post('/delete_all_dups_and_dups_parent', (req, res) => {
+//     try {
+//     const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.role_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
+//     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
+//     db.prepare('DELETE FROM dups').run() ? null : error_response(res, 'dupsを削除できませんでした');
+//     db.prepare('DELETE FROM dups_parent').run() ? null : error_response(res, 'dups_parentを削除できませんでした');
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// })
+async fetch_delete_all_dups_and_dups_parent(){
+    const res = await fetch('http://localhost:8000/delete_all_dups_and_dups_parent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+        }),
+    });
+    const data = await res.json();
+    this.response_message = data;
+    console.log(data);
+},
 
 }}).mount('.app');
 </script>
