@@ -5,14 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dup_replacer</title>
-<script src="./vue@3.2.36.global.prod.js"></script>
-<script src="./localforage@1.10.0.js"></script>
-<script src="./ramda.@0.28.0.js"></script>
-<link rel="stylesheet" href="reset.css">
+<script src="./lib/vue@3.2.36.global.prod.js"></script>
+<script src="./lib/localforage@1.10.0.js"></script>
+<script src="./lib/ramda.@0.28.0.js"></script>
+<link rel="stylesheet" href="./lib/reset.css">
 <style>
-ul{
-    list-style-type: none;
-}
+/* for positioning */
 .app {
 display: grid;
 grid-gap: 0px;
@@ -21,28 +19,24 @@ grid-template-areas:
     "textarea_parent textarea_parent"
     "list_parent web_data_parent"
     ;
-    background-color: gray;
     width: 100vw;
 }
 .button_parent{
     grid-area: button_parent;
     display: grid;
-    /* grid-template-columns: repeat(5, 1fr); */
     grid-gap: 0px;
-    /* width: auto; */
 }
-.textarea_parent{grid-area: textarea_parent;
+.textarea_parent{
+    grid-area: textarea_parent;
     width: 100vw;
-    background-color: blueviolet;
 }
-/* width: 100vw;} */
-.list_parent{grid-area: list_parent;
-width: 50vw;}
-.web_data_parent{grid-area: web_data_parent;}
-/* width: 50vw;} */
-textarea{
-    /* width: 100%; */
-    /* max-height: 30rem; */
+.list_parent{
+    grid-area: list_parent;
+    width: 50vw;
+}
+.web_data_parent{
+    grid-area: web_data_parent;
+    width: 50vw;
 }
 .textarea_childs{
     display: grid;
@@ -54,6 +48,18 @@ textarea{
 .b{grid-area: b;}
 .c{grid-area: c;}
 .d{grid-area: d;}
+
+
+/* for styling */
+.textarea_parent{
+    background-color: blueviolet;
+}
+.accent_color{
+    background-color: greenyellow;
+}
+.accent_color_2{
+    background-color: yellow;
+}
 </style>
 </head>
 <body>
@@ -79,16 +85,16 @@ textarea{
 </div>
 
 <div class="list_parent">
-    <input type="button" value="sort_by_when" @click="sort_by_when">
-    <input type="button" value="sort_by_rating" @click="sort_by_rating">
-    <input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text">
+    <div><input type="button" value="sort_by_when" @click="sort_by_when"></div>
+    <div><input type="button" value="sort_by_rating" @click="sort_by_rating"></div>
+    <div><input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text"></div>
     <ul>
-    <li v-for="(item, index) in all_save">
-    <button @click="save_data_set(index)">save_data_set</button>
-    {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
-    <p>{{ item }}</p>
-    <button @click="save_data_delete(index)">save_data_delete</button>
-    </li>
+        <li v-for="(item, index) in all_save">
+        <button @click="save_data_set(index)">save_data_set</button>
+        {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+        <p>{{ item }}</p>
+        <button @click="save_data_delete(index)">save_data_delete</button>
+        </li>
     </ul>
 </div>
 
@@ -96,13 +102,12 @@ textarea{
     <ul>
     <li v-for="(item, index) in response_message">
     <!-- <button>copy</button> -->
-    <button @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
+    <button class="accent_color_2" @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
     <div>
-        <div>{{ INDEX_1 }}</div>
+        <div class="accent_color">{{ INDEX_1 }}</div>
         <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
         <div><span>dups_parent_created_at: </span><span>{{ ITEM_1.dups_parent_created_at }}</span></div>
-        <!-- <div><span>dups_parent_updated_at: </span><span>{{ ITEM_1.dups_parent_updated_at }}</span></div> -->
         <div><span>user_name: </span><span>{{ ITEM_1.user_name }}</span></div>
         <div><span>dups_content_group_id: </span><span>{{ ITEM_1.dups_content_group_id }}</span></div>
         <div><span>dups_content_1: </span><span>{{ ITEM_1.dups_content_1 }}</span></div>
