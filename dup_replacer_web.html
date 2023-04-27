@@ -8,176 +8,93 @@
 <script src="./vue@3.2.36.global.prod.js"></script>
 <script src="./localforage@1.10.0.js"></script>
 <script src="./ramda.@0.28.0.js"></script>
+<link rel="stylesheet" href="reset.css">
 <style>
 ul{
-list-style-type: none;
+    list-style-type: none;
 }
 .app {
 display: grid;
-/* grid-auto-columns: auto; */
-/* grid-template-rows: 3rem auto 1fr; */
 grid-gap: 0px;
 grid-template-areas:
-    "button"
-    "textarea"
-    "list"
-    "duplicate_button"
+    "button_parent button_parent"
+    "textarea_parent textarea_parent"
+    "list_parent web_data_parent"
     ;
+    background-color: gray;
+    width: 100vw;
 }
+.button_parent{
+    grid-area: button_parent;
+    display: grid;
+    /* grid-template-columns: repeat(5, 1fr); */
+    grid-gap: 0px;
+    /* width: auto; */
+}
+.textarea_parent{grid-area: textarea_parent;
+    width: 100vw;
+    background-color: blueviolet;
+}
+/* width: 100vw;} */
+.list_parent{grid-area: list_parent;
+width: 50vw;}
+.web_data_parent{grid-area: web_data_parent;}
+/* width: 50vw;} */
 textarea{
-    width: 100%;
-    max-height: 30rem; /* 最大高さ */
+    /* width: 100%; */
+    /* max-height: 30rem; */
 }
 .textarea_childs{
     display: grid;
-    /* grid-template-columns: 1fr 1fr 1fr 1fr; */
-    /* grid-template-rows: calc(100% + 3rem) calc(100% + 3rem) calc(100% + 3rem) calc(100% + 3rem); */
-    /* grid-gap: 0px; */
     grid-template-areas:
     'a b d'
     'a c d';
 }
-.a{
-    grid-area: a;
-    /* height: 100%; */
-}
-.b{
-    grid-area: b;
-}
-.c{
-    grid-area: c;
-}
-.d{
-    grid-area: d;
-    /* height: 100%; */
-}
-.duplicate_button{
-    grid-area: duplicate_button;
-}
-
-
-
-/* .button_parent{
-display: grid;
-grid-area: button;
-grid-template-rows: 1fr;
-grid-template-columns: repeat(3, 1fr);
-}
-.textarea_parent {
-display: grid;
-grid-auto-rows: auto;
-grid-template-columns: 2fr 1fr 1fr 2fr;
-grid-gap: 0px;
-}
-*/
+.a{grid-area: a;}
+.b{grid-area: b;}
+.c{grid-area: c;}
+.d{grid-area: d;}
 </style>
 </head>
 <body>
 <div class="app">
 
 <div class="button_parent">
-
-
-<input type="button" value="save_data_to_all_save" @click="save_data_to_all_save">
-<!-- vue.jsのチェックボックスのデータのバインドの仕方のサンプルのHTML-->
-in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="in_reference_to_INDEX_0_apply_check">
-<!-- <input type="checkbox" name="in_reference_to_INDEX_0_apply_check" id="in_reference_to_INDEX_0_apply_check" v-model="in_reference_to_INDEX_0_apply_check"> -->
-
-
+    <input type="button" value="save_data_to_all_save" @click="save_data_to_all_save">
+    <input type="checkbox" id="check" v-model="in_reference_to_INDEX_0_apply_check">
 </div>
 
 <div class="textarea_parent">
-<!-- <div class="tag">
-<input type="text" name="tag_input" class="tag_input">
-<ul>
-<li v-for="(item, index) in tag">
-{{item}}
-</li>
-</ul>
-</div> -->
-
-<div v-for="(DATA, INDEX) in B_C_list" class="textarea_childs">
-    <textarea name="a" class="a" v-model="DATA[0]"></textarea>
-
-    <textarea name="b" class="b" v-model="DATA[1]"></textarea>
-    <textarea name="c" class="c" v-model="DATA[2]"></textarea>
-
-    <textarea name="d" class="d" v-model="DATA[3]"></textarea>
-</div>
-<button @click="duplicate_button">duplicate_button</button>
-
-<textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
-<button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
-<button @click="fetch_insert_dup">fetch_insert_dup</button>
-<button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
-
-<!-- <button @click="fetched_data_localforage">fetched_data_localforage</button> -->
-
+    <div v-for="(DATA, INDEX) in B_C_list" class="textarea_childs">
+        <textarea name="a" class="a" v-model="DATA[0]"></textarea>
+        <textarea name="b" class="b" v-model="DATA[1]"></textarea>
+        <textarea name="c" class="c" v-model="DATA[2]"></textarea>
+        <textarea name="d" class="d" v-model="DATA[3]"></textarea>
+    </div>
+    <button @click="duplicate_button">duplicate_button</button>
+    <textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
+    <button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
+    <button @click="fetch_insert_dup">fetch_insert_dup</button>
+    <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
 </div>
 
-<input type="button" value="sort_by_when" @click="sort_by_when">
-<input type="button" value="sort_by_rating" @click="sort_by_rating">
-<input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text">
-<ul>
-<li v-for="(item, index) in all_save">
-<button @click="save_data_set(index)">save_data_set</button>
-{{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
-<p>{{ item }}</p>
-<button @click="save_data_delete(index)">save_data_delete</button>
-</li>
-</ul>
+<div class="list_parent">
+    <input type="button" value="sort_by_when" @click="sort_by_when">
+    <input type="button" value="sort_by_rating" @click="sort_by_rating">
+    <input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text">
+    <ul>
+    <li v-for="(item, index) in all_save">
+    <button @click="save_data_set(index)">save_data_set</button>
+    {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+    <p>{{ item }}</p>
+    <button @click="save_data_delete(index)">save_data_delete</button>
+    </li>
+    </ul>
+</div>
 
-
-<!--
-    {
-    "6": [
-        {
-            "dups_parent_id": 6,
-            "dups_parent_created_at": "2023-04-25T09:41:14.896Z",
-            "dups_parent_updated_at": "2023-04-25T09:41:14.896Z",
-            "user_name": "name1",
-            "dups_content_group_id": 0,
-            "dups_content_1": "aaBBccDD",
-            "dups_content_2": "aa\nEF\nHI",
-            "dups_content_3": "XX\nef\nhi"
-        }
-    ],
-    "7": [
-        {
-            "dups_parent_id": 7,
-            "dups_parent_created_at": "2023-04-25T09:41:18.743Z",
-            "dups_parent_updated_at": "2023-04-25T09:41:18.743Z",
-            "user_name": "name1",
-            "dups_content_group_id": 0,
-            "dups_content_1": "aaBBccDD",
-            "dups_content_2": "aa\nEF\nHI",
-            "dups_content_3": "XX\nef\nhi"
-        },
-        {
-            "dups_parent_id": 7,
-            "dups_parent_created_at": "2023-04-25T09:41:18.743Z",
-            "dups_parent_updated_at": "2023-04-25T09:41:18.743Z",
-            "user_name": "name1",
-            "dups_content_group_id": 1,
-            "dups_content_1": "aaBBccDD",
-            "dups_content_2": "aa\nEF\nHI",
-            "dups_content_3": "XX\nef\nhi"
-        },
-        {
-            "dups_parent_id": 7,
-            "dups_parent_created_at": "2023-04-25T09:41:18.743Z",
-            "dups_parent_updated_at": "2023-04-25T09:41:18.743Z",
-            "user_name": "name1",
-            "dups_content_group_id": 2,
-            "dups_content_1": "aaBBccDD",
-            "dups_content_2": "aa\nEF\nHI",
-            "dups_content_3": "XX\nef\nhi"
-        }
-    ]
-} -->
-<!-- 上記のようなデータをulとliとdivとspanで表示する  -->
-<ul>
-<li v-for="(item, index) in response_message">
+<div class="web_data_parent">
+    <ul>
+    <li v-for="(item, index) in response_message">
     <!-- <button>copy</button> -->
     <button @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
@@ -193,9 +110,9 @@ in_reference_to_INDEX_0_apply_check: <input type="checkbox" id="check" v-model="
         <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
     </div>
     </template>
-</li>
-</ul>
-
+    </li>
+    </ul>
+</div>
 
 
 
