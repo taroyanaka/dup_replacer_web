@@ -80,8 +80,6 @@ grid-template-areas:
     <button @click="duplicate_button">duplicate_button</button>
     <textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
     <button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
-    <button @click="fetch_insert_dup">fetch_insert_dup</button>
-    <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
 </div>
 
 <div class="list_parent">
@@ -99,6 +97,9 @@ grid-template-areas:
 </div>
 
 <div class="web_data_parent">
+    <button @click="fetch_insert_dup">fetch_insert_dup</button>
+    <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
+
     <ul>
     <li v-for="(item, index) in response_message">
     <!-- <button>copy</button> -->
