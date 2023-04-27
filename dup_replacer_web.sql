@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS user_permission;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS dups_parent;
 DROP TABLE IF EXISTS dups;
+DROP TABLE IF EXISTS likes;
 
 -- ユーザーの権限のテーブル。カラムはIDはと名前と作成日と更新日を持つ。IDは自動的に増加する
 -- カラムの中には、一般ユーザー、ゲストユーザーがある
@@ -14,6 +15,7 @@ CREATE TABLE user_permission (
   readable INTEGER NOT NULL,
   writable INTEGER NOT NULL,
   deletable INTEGER NOT NULL, 
+  likable INTEGER NOT NULL,
 
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL
@@ -50,9 +52,31 @@ CREATE TABLE dups (
   content_3 TEXT NOT NULL,
   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 );
+
+-- likeというブログの高評価ボタンのようなサービスのテーブル。IDは自動的に増加する。dups_parentのIDを外部キーとして持つ
+CREATE TABLE likes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dups_parent_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+);
+
 -- user_permissionにデータを2レコード挿入する
-INSERT INTO user_permission (id, permission, readable, writable, deletable, created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, DATETIME('now'), DATETIME('now'));
-INSERT INTO user_permission (id, permission, readable, writable, deletable, created_at, updated_at) VALUES (2, 'user', 1, 1, 1, DATETIME('now'), DATETIME('now'));
+INSERT INTO user_permission (id, permission,
+readable,
+writable,
+deletable,
+likable,
+created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, 0, DATETIME('now'), DATETIME('now'));
+INSERT INTO user_permission (id, permission,
+readable,
+writable,
+deletable,
+likable,
+created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, DATETIME('now'), DATETIME('now'));
+
 
 -- usersにデータを3レコード挿入する
 INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));

@@ -1,8 +1,3 @@
-// DROP TABLE IF EXISTS user_permission;
-// DROP TABLE IF EXISTS users;
-// DROP TABLE IF EXISTS dups_parent;
-// DROP TABLE IF EXISTS dups;
-
 // CREATE TABLE user_permission (
 //   id INTEGER PRIMARY KEY,
 
@@ -27,22 +22,29 @@
 
 // CREATE TABLE dups_parent (
 //   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   user_id INTEGER NOT NULL,
+//     user_id INTEGER NOT NULL,
 //   created_at DATETIME NOT NULL,
 //   updated_at DATETIME NOT NULL,
-//   FOREIGN KEY (user_id) REFERENCES users(id)
+//     FOREIGN KEY (user_id) REFERENCES users(id)
 // );
 
 
 // CREATE TABLE dups (
 //   id INTEGER PRIMARY KEY AUTOINCREMENT,
 //   dups_parent_id INTEGER NOT NULL,
-//   content_group_id INTEGER NOT NULL,
-//   content_1 TEXT NOT NULL,
-//   content_2 TEXT NOT NULL,
-//   content_3 TEXT NOT NULL,
-//   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+//   content TEXT NOT NULL,
+//     FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 // );
+
+// CREATE TABLE likes (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     dups_parent_id INTEGER NOT NULL,
+//     user_id INTEGER NOT NULL,
+//     created_at DATETIME NOT NULL,
+//     updated_at DATETIME NOT NULL,
+//     FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+// );
+
 // INSERT INTO user_permission (id, permission, readable, writable, deletable, created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, DATETIME('now'), DATETIME('now'));
 // INSERT INTO user_permission (id, permission, readable, writable, deletable, created_at, updated_at) VALUES (2, 'user', 1, 1, 1, DATETIME('now'), DATETIME('now'));
 
@@ -60,17 +62,44 @@ app.use(bodyParser.json());
 const cors = require('cors');
 app.use(cors());
 const port = 8000;
-app.listen(port, "0.0.0.0", () => console.log(`App listening!!! at http://localhost:${port}`) );
+app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
 
 const now = () => new Date().toISOString();
 const true_if_within_4000_characters_and_not_empty = (str) => str.length > 2 && str.length <= 4000 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
 
 // '/read_dups_parent'というGETのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsとそれを紐づけるuserを取得する。
 // それらの全てのidとcontent1とcontent2とcontent3を返すとcreated_atとupdated_atとuserのnameを返す
+// dups_parentのlike数も返す
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.get('/read_dups_parent', (req, res) => {
     try {
-    const rows = db.prepare('SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.name AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3 FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id').all();
+const rows = db.prepare(
+`SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.name AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3
+,
+(SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+`).all();
+
+//     const rows = db.prepare(`
+// SELECT dups_parent.id AS dups_parent_id, users.name, dups_parent.created_at, dups_parent.updated_at, dups.content1, dups.content2, dups.content3, COUNT(likes.id) AS likes_count FROM dups_parent
+// LEFT OUTER JOIN users ON dups_parent.user_id = users.id
+// LEFT OUTER JOIN dups ON dups_parent.id = dups.dups_parent_id
+// LEFT OUTER JOIN likes ON dups_parent.id = likes.dups_parent_id
+// GROUP BY dups_parent.id, users.name, dups_parent.created_at, dups_parent.updated_at, dups.content1, dups.content2, dups.content3
+// ORDER BY dups_parent.id DESC;`
+//     ).all();
+// 上記のdb.prepareを特定のuser_idのみに絞り込む場合は以下のようにする
+// const rows2 = db.prepare(`
+// SELECT dups_parent.id, users.name, dups_parent.created_at, dups_parent.updated_at, COUNT(dups.id) AS dups_count, COUNT(likes.id) AS likes_count FROM dups_parent
+// LEFT OUTER JOIN users ON dups_parent.user_id = users.id
+// LEFT OUTER JOIN dups ON dups_parent.id = dups.dups_parent_id
+// LEFT OUTER JOIN likes ON dups_parent.id = likes.dups_parent_id
+// WHERE dups_parent.user_id = ?
+// GROUP BY dups_parent.id, users.name, dups_parent.created_at, dups_parent.updated_at
+// ORDER BY dups_parent.id DESC;`
+// ).all(1);
+
     // 上記をJSでdups_parent_id毎にまとめる関数
     function groupBy(array, key) {
         return array.reduce((result, currentValue) => {
@@ -82,9 +111,11 @@ app.get('/read_dups_parent', (req, res) => {
     }
     const group_rows = groupBy(rows, 'dups_parent_id');
     res.json(group_rows);
+    // res.json(rows);
     } catch (error) {
         console.log(error);
-        error_response(res, '原因不明のエラー' + error);
+        error_response(res,
+            '原因不明のエラー' + error);
     }
 });
 
@@ -103,7 +134,8 @@ app.post('/insert_dup', (req, res) => {
         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
-        user_permission.readable AS readable
+        user_permission.readable AS readable,
+        user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.name = ? AND users.password = ?
@@ -113,6 +145,7 @@ app.post('/insert_dup', (req, res) => {
     db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, ?, ?)').run(user_with_permission.user_id, now(), now()) ? null : error_response(res, 'dups_parentに追加できませんでした');
     const dups_parent_id = db.prepare('SELECT id FROM dups_parent ORDER BY id DESC LIMIT 1').get().id;
     req.body.B_C_list.forEach((EACH_CONTENT, CONTENT_GROUP_ID) => {
+        console.log(EACH_CONTENT);
         db.prepare('INSERT INTO dups (dups_parent_id, content_group_id, content_1, content_2, content_3) VALUES (?, ?, ?, ?, ?)').run(dups_parent_id, CONTENT_GROUP_ID, EACH_CONTENT[0], EACH_CONTENT[1], EACH_CONTENT[2]) ? null : error_response(res, 'dupsに追加できませんでした');
     });
     res.json({message: 'success'});
@@ -121,7 +154,6 @@ app.post('/insert_dup', (req, res) => {
         error_response(res, '原因不明のエラー' + error);
     }
 });
-
 // '/delete_dup'というPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを削除する。
 // error_responseを使ってエラーを返すパターンとしては、
 // 1. ユーザーが存在しません
@@ -131,26 +163,17 @@ app.post('/insert_dup', (req, res) => {
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.post('/delete_dup', (req, res) => {
     try {
-    const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
-        user_permission.deletable AS deletable,
-        user_permission.writable AS writable,
-        user_permission.readable AS readable
-        FROM users
-        LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
-    `).get(req.body.name, req.body.password);
-    user_with_permission ? null : error_response(res, 'ユーザーが存在しません');
+    const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.user_permission_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
     db.prepare('DELETE FROM dups WHERE dups_parent_id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dupsを削除できませんでした');
     db.prepare('DELETE FROM dups_parent WHERE id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dups_parentを削除できませんでした');
     res.json({message: 'success'});
+
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
     }
 });
-
 // delete_all_dups_and_dups_parentというPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを全て削除する。
 app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     try {
@@ -159,7 +182,8 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
-        user_permission.readable AS readable
+        user_permission.readable AS readable,
+        user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.name = ? AND users.password = ?
@@ -171,6 +195,37 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     db.prepare('DELETE FROM dups_parent').run() ? null : error_response(res, 'dups_parentを削除できませんでした');
     res.json({message: 'success'});
 
+    } catch (error) {
+        console.log(error);
+        error_response(res, '原因不明のエラー' + error);
+    }
+});
+
+// 'like_dups_parent'というPOSTのリクエストを受け取るエンドポイントで、dups_parentのlikeを増やす。
+// error_responseを使ってエラーを返すパターンとしては、
+// 1. ユーザーが存在しません
+// 2. いいね権限がありません
+// 3. いいねを追加できませんでした
+// 原因不明のエラーの場合は適当なエラーレスポンスを返す
+app.post('/like_dups_parent', (req, res) => {
+    try {
+    const user_with_permission = db.prepare(`
+        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        user_permission.deletable AS deletable,
+        user_permission.writable AS writable,
+        user_permission.readable AS readable,
+        user_permission.likable AS likable
+        FROM users
+        LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+        WHERE users.name = ? AND users.password = ?
+    `).get(req.body.name, req.body.password);
+        // console.log(user_with_permission);
+    user_with_permission.likable === 1 ? null : error_response(res, 'いいね権限がありません');
+    console.log(req.body.dups_parent_id, user_with_permission.user_id, now(), now());
+    db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+        .run(req.body.dups_parent_id, user_with_permission.user_id, now(), now())
+            ? null : error_response(res, 'いいねを追加できませんでした');
+    res.json({message: 'success'});
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);

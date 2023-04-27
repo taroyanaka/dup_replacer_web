@@ -104,7 +104,10 @@ grid-template-areas:
     <li v-for="(item, index) in response_message">
     <!-- <button>copy</button> -->
     <button class="accent_color_2" @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
+    <!-- <span>likes_count: </span><span>{{ item[0].likes_count }}</span> -->
+    <button @click="fetch_like_dups_parent(item[0]['dups_parent_id'])">fetch_like_dups_parent</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
+        <!-- <span>{{ITEM_1}}</span> -->
     <div>
         <div class="accent_color">{{ INDEX_1 }}</div>
         <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
@@ -114,6 +117,7 @@ grid-template-areas:
         <div><span>dups_content_1: </span><span>{{ ITEM_1.dups_content_1 }}</span></div>
         <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
         <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
+        <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
     </div>
     </template>
     </li>
@@ -313,7 +317,7 @@ async fetch_insert_dup(){
 
 // app.get('/read_dups_parent', (req, res) => {
 //     try {
-//         const rows = db.prepare('SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.name AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3 FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id').all();
+//     const rows = db.prepare('SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, dups.content AS dups_content, dups.created_at AS dups_created_at, dups.updated_at AS dups_updated_at, users.name AS user_name, COUNT(likes.id) AS likes_count FROM dups_parent LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id LEFT JOIN users ON dups_parent.user_id = users.id LEFT JOIN likes ON dups_parent.id = likes.dups_parent_id GROUP BY dups_parent.id').all();
 //     res.json(rows);
 //     } catch (error) {
 //         console.log(error);
@@ -380,6 +384,35 @@ const INDEX_STRING = (INDEX).toString();
         // this.data_convert_for_localforage(this.to_ary(this.response_message)['8'])
     );
     await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+
+// app.post('/like_dups_parent', (req, res) => {
+//     try {
+//     const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.role_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
+//     user_with_permission.likable === 1 ? null : error_response(res, 'いいね権限がありません');
+//     db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, DATETIME("now"), DATETIME("now"))').run(req.body.dups_parent_id, user_with_permission.id) ? null : error_response(res, 'いいねを追加できませんでした');
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
+async fetch_like_dups_parent(DUPS_PARENT_ID){
+    const res = await fetch('http://localhost:8000/like_dups_parent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            dups_parent_id: DUPS_PARENT_ID,
+        }),
+    });
+    const data = await res.json();
+    // this.response_message = data;
+    console.log(data);
+    await this.fetch_read_dups_parent();
 },
 
 }}).mount('.app');
