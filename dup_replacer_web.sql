@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS dups_parent;
 DROP TABLE IF EXISTS dups;
 DROP TABLE IF EXISTS likes;
+DROP TABLE IF EXISTS dups_parent_tags;
+DROP TABLE IF EXISTS tags;
 
 -- ユーザーの権限のテーブル。カラムはIDはと名前と作成日と更新日を持つ。IDは自動的に増加する
 -- カラムの中には、一般ユーザー、ゲストユーザーがある
@@ -25,8 +27,8 @@ CREATE TABLE user_permission (
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_permission_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  password TEXT NOT NULL,
+  username TEXT NOT NULL,
+  userpassword TEXT NOT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   FOREIGN KEY (user_permission_id) REFERENCES user_permission(id)
@@ -69,9 +71,7 @@ CREATE TABLE dups_parent_tags (
   dups_parent_id INTEGER NOT NULL,
   tag_id INTEGER NOT NULL,
   created_at DATETIME NOT NULL,
-  updated_at DATETIME NOT NULL,
-  FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id),
-  FOREIGN KEY (tag_id) REFERENCES tags(id)
+  updated_at DATETIME NOT NULL
 );
 
 -- tagsというブログのタグのようなサービスのテーブル。IDは自動的に増加する。dups_parent_tagsを外部キーとして持つ
@@ -99,9 +99,9 @@ created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, DATETIME('now'), DATETIME
 
 
 -- usersにデータを3レコード挿入する
-INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));
-INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (2, 'name1', 'password1', DATETIME('now'), DATETIME('now'));
-INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (2, 'name2', 'password2', DATETIME('now'), DATETIME('now'));
+INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));
+INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'name1', 'password1', DATETIME('now'), DATETIME('now'));
+INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'name2', 'password2', DATETIME('now'), DATETIME('now'));
 
 -- likesにデータを3レコード挿入する
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));

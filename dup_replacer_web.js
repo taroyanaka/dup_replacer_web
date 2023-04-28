@@ -55,7 +55,7 @@
 
 const express = require('express');
 const sqlite = require('better-sqlite3');
-const db = new sqlite('../dup.sqlite3');
+const db = new sqlite('./dup.sqlite3');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
@@ -70,40 +70,43 @@ const true_if_within_10_characters_and_not_empty = (str) => str.length > 2 && st
 
 // '/read_dups_parent'というGETのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsとそれを紐づけるuserを取得する。
 // それらの全てのidとcontent1とcontent2とcontent3を返すとcreated_atとupdated_atとuserのnameを返す
-// dups_parentのlike数も返す
-// dups_parentのtagも返す
+// dups_parentのlike数も返す、dups_parentに紐づくtagも返す
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.get('/read_dups_parent', (req, res) => {
     try {
+
+
+// const rows = 
+// db.prepare(`
+//     SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at,
+//     dups.id AS dups_id,
+//     users.id AS users_id, users.username AS users_name,
+//     likes.id AS likes_id, likes.created_at AS likes_created_at, likes.updated_at AS likes_updated_at,
+//     tags.id AS tags_id, tags.tag AS tags_tag
+//     FROM dups_parent
+//     LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+//     LEFT JOIN users ON dups_parent.user_id = users.id
+//     LEFT JOIN likes ON dups_parent.id = likes.dups_parent_id
+//     JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+//     JOIN tags ON dups_parent_tags.tag_id = tags.id
+//     ORDER BY dups_parent.id DESC
+//     `).all();
+
+
+
 const rows = db.prepare(
-`SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.name AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3
-,
-(SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
-(SELECT tag FROM tags WHERE tags.dups_parent_id = dups_parent.id) AS tag
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+    `SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.username AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3
+    ,
+    tags.id as tags_id,
+    tags.tag as tags_tag,
+    (SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
+    FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+    LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+    LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+
 `).all();
-
-//     const rows = db.prepare(`
-// SELECT dups_parent.id AS dups_parent_id, users.name, dups_parent.created_at, dups_parent.updated_at, dups.content1, dups.content2, dups.content3, COUNT(likes.id) AS likes_count FROM dups_parent
-// LEFT OUTER JOIN users ON dups_parent.user_id = users.id
-// LEFT OUTER JOIN dups ON dups_parent.id = dups.dups_parent_id
-// LEFT OUTER JOIN likes ON dups_parent.id = likes.dups_parent_id
-// GROUP BY dups_parent.id, users.name, dups_parent.created_at, dups_parent.updated_at, dups.content1, dups.content2, dups.content3
-// ORDER BY dups_parent.id DESC;`
-//     ).all();
-// 上記のdb.prepareを特定のuser_idのみに絞り込む場合は以下のようにする
-// const rows2 = db.prepare(`
-// SELECT dups_parent.id, users.name, dups_parent.created_at, dups_parent.updated_at, COUNT(dups.id) AS dups_count, COUNT(likes.id) AS likes_count FROM dups_parent
-// LEFT OUTER JOIN users ON dups_parent.user_id = users.id
-// LEFT OUTER JOIN dups ON dups_parent.id = dups.dups_parent_id
-// LEFT OUTER JOIN likes ON dups_parent.id = likes.dups_parent_id
-// WHERE dups_parent.user_id = ?
-// GROUP BY dups_parent.id, users.name, dups_parent.created_at, dups_parent.updated_at
-// ORDER BY dups_parent.id DESC;`
-// ).all(1);
-
-    // 上記をJSでdups_parent_id毎にまとめる関数
+    // 上記をrowsをdups_parent_idとtag毎にまとめる関数
     function groupBy(array, key) {
         return array.reduce((result, currentValue) => {
             (result[currentValue[key]] = result[currentValue[key]] || []).push(
@@ -113,7 +116,30 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
         }, {});
     }
     const group_rows = groupBy(rows, 'dups_parent_id');
-    res.json(group_rows);
+
+
+function group_by_tags(data1) {
+    return Object.keys(data1).reduce((data2, dups_parent_id) => {
+      const dups_parent = data1[dups_parent_id][0];
+      const [tags_id, tags_tag] = data1[dups_parent_id].reduce((acc, data) => {
+        return [acc[0].concat(data.tags_id), acc[1].concat(data.tags_tag)];
+      }, [[], []]);
+      data2[dups_parent_id] = [dups_parent];
+      data2[dups_parent_id][0].tags_id = tags_id.length ? tags_id : null;
+      data2[dups_parent_id][0].tags_tag = tags_tag.length ? tags_tag : null;
+      return data2;
+    }, {});
+}
+  
+// const group_rows_by_tags = group_by_tags(group_rows);
+// console.log(group_rows_by_tags);
+console.log(group_rows);
+// console.log(rows);
+
+// res.json(rows);
+res.json(group_rows);
+// res.json(group_rows_by_tags);
+
     // res.json(rows);
     } catch (error) {
         console.log(error);
@@ -128,29 +154,34 @@ const error_response = (res, error_message) => res.status(400).json({ error: err
 
 // '/insert_dup'というPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを作成する。
 app.post('/insert_dup', (req, res) => {
-    console.log(req.body.B_C_list);
+    // console.log(req.body.B_C_list);
     try {
     req.body.B_C_list.forEach((EACH_CONTENT) => {
         true_if_within_4000_characters_and_not_empty(EACH_CONTENT.join("")) ? null : error_response(res, '4000文字以内で入力して');
     });
     const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
         user_permission.readable AS readable,
         user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
+        WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
     user_with_permission ? null : error_response(res, 'ユーザーが存在しません');
+    // console.log(user_with_permission);
     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
     db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, ?, ?)').run(user_with_permission.user_id, now(), now()) ? null : error_response(res, 'dups_parentに追加できませんでした');
     const dups_parent_id = db.prepare('SELECT id FROM dups_parent ORDER BY id DESC LIMIT 1').get().id;
+    console.log(dups_parent_id);
     req.body.B_C_list.forEach((EACH_CONTENT, CONTENT_GROUP_ID) => {
         console.log(EACH_CONTENT);
-        db.prepare('INSERT INTO dups (dups_parent_id, content_group_id, content_1, content_2, content_3) VALUES (?, ?, ?, ?, ?)').run(dups_parent_id, CONTENT_GROUP_ID, EACH_CONTENT[0], EACH_CONTENT[1], EACH_CONTENT[2]) ? null : error_response(res, 'dupsに追加できませんでした');
+        db.prepare('INSERT INTO dups (dups_parent_id, content_group_id, content_1, content_2, content_3) VALUES (?, ?, ?, ?, ?)')
+            .run(dups_parent_id, CONTENT_GROUP_ID, EACH_CONTENT[0], EACH_CONTENT[1], EACH_CONTENT[2]) ? null : error_response(res, 'dupsに追加できませんでした');
+
     });
+
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
@@ -166,7 +197,7 @@ app.post('/insert_dup', (req, res) => {
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.post('/delete_dup', (req, res) => {
     try {
-    const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.user_permission_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
+    const user_with_permission = db.prepare('SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.user_permission_id = user_permission.id WHERE users.username = ? AND users.userpassword = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
     db.prepare('DELETE FROM dups WHERE dups_parent_id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dupsを削除できませんでした');
     db.prepare('DELETE FROM dups_parent WHERE id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dups_parentを削除できませんでした');
@@ -182,19 +213,21 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     try {
         console.log(req.body);
     const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
         user_permission.readable AS readable,
         user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
+        WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
     user_with_permission ? null : error_response(res, 'ユーザーが存在しません');
 
     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
     db.prepare('DELETE FROM dups').run() ? null : error_response(res, 'dupsを削除できませんでした');
+    db.prepare('DELETE FROM dups_parent_tags').run() ? null : error_response(res, 'dups_parent_tagsを削除できませんでした');
+    db.prepare('DELETE FROM tags').run() ? null : error_response(res, 'tagsを削除できませんでした');
     db.prepare('DELETE FROM dups_parent').run() ? null : error_response(res, 'dups_parentを削除できませんでした');
     res.json({message: 'success'});
 
@@ -213,14 +246,14 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
 app.post('/like_dups_parent', (req, res) => {
     try {
     const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
         user_permission.readable AS readable,
         user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
+        WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
         // console.log(user_with_permission);
     user_with_permission.likable === 1 ? null : error_response(res, 'いいね権限がありません');
@@ -251,29 +284,40 @@ app.post('/like_dups_parent', (req, res) => {
 // );
 app.post('/add_tag', (req, res) => {
     try {
+        console.log(req.body.tag);
     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, 'タグは10文字以内で入力してください');
     const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
         user_permission.readable AS readable,
         user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
+        WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
-
-    // タグが存在しない場合は、タグを追加する
-    let tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
-    if(tag_id === null) {
+    let tag = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag);
+    // .id;
+    // console.log(tag);
+    if(tag === undefined) {
+        console.log('tagがundefined');
         db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
-        tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
-    }
-    db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
-        .run(req.body.dups_parent_id, tag_id, now(), now())
-            ? null : error_response(res, 'タグを追加できませんでした');
-    res.json({message: 'success'});
+        const tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
+        db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+            .run(req.body.dups_parent_id, tag_id, now(), now());
+            res.json({message: 'success'});
+    }else{
+        console.log('tagがundefinedじゃない');
+        console.log(tag);
+            const tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id
+            db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+                .run(req.body.dups_parent_id, tag_id, now(), now());
+                res.json({message: 'success'});
+    };
+    // db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+    //     .run(req.body.dups_parent_id, tag_id, now(), now())
+    //         ? null : error_response(res, 'タグを追加できませんでした');
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
@@ -283,14 +327,14 @@ app.post('/add_tag', (req, res) => {
 app.post('/read_all_tags', (req, res) => {
     try {
     const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
         user_permission.readable AS readable,
         user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
+        WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.readable === 1 ? null : error_response(res, '読み込み権限がありません');
     const tags = db.prepare('SELECT * FROM tags').all();
@@ -305,14 +349,14 @@ app.post('/read_all_tags', (req, res) => {
 app.post('/delete_tag', (req, res) => {
     try {
     const user_with_permission = db.prepare(`
-        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
         user_permission.writable AS writable,
         user_permission.readable AS readable,
         user_permission.likable AS likable
         FROM users
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-        WHERE users.name = ? AND users.password = ?
+        WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
     db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.tag_id);
@@ -324,3 +368,4 @@ app.post('/delete_tag', (req, res) => {
         error_response(res, '原因不明のエラー' + error);
     }
 });
+1

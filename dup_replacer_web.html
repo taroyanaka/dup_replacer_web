@@ -99,7 +99,7 @@ grid-template-areas:
 <div class="web_data_parent">
     <button @click="fetch_insert_dup">fetch_insert_dup</button>
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
-    <input type="text" v-model="tag" class="tag" placeholder="tag"><button @click="fetch_insert_dup_with_tag">fetch_insert_dup_with_tag</button>
+    <input type="text" v-model="tag" class="tag" placeholder="tag">
     <ul>
         <li v-for="(TAG, TAG_INDEX) in all_tags">{{ TAG }}</li>
     </ul>
@@ -108,6 +108,7 @@ grid-template-areas:
     <li v-for="(item, index) in response_message">
     <!-- <button>copy</button> -->
     <button class="accent_color_2" @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
+    <button class="accent_color_2" @click="fetch_add_tag(item[0]['dups_parent_id'])">fetch_add_tag</button>
     <!-- <span>likes_count: </span><span>{{ item[0].likes_count }}</span> -->
     <button @click="fetch_like_dups_parent(item[0]['dups_parent_id'])">fetch_like_dups_parent</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
@@ -122,6 +123,8 @@ grid-template-areas:
         <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
         <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
         <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
+        <div><span>tags_id: </span><span>{{ ITEM_1.tags_id }}</span></div>
+        <div><span>tags_tag: </span><span>{{ ITEM_1.tags_tag }}</span></div>
     </div>
     </template>
     </li>
@@ -320,6 +323,7 @@ async fetch_insert_dup(){
     const data = await res.json();
     // this.response_message = data;
     // console.log(data);
+    await fetch_read_dups_parent();
 },
 
 // app.get('/read_dups_parent', (req, res) => {
@@ -437,7 +441,7 @@ async fetch_like_dups_parent(DUPS_PARENT_ID){
 
 // app.post('/add_tag', (req, res) => {
 //     try {
-//     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, '10文字以内で入力して');
+//     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, 'タグは10文字以内で入力してください');
 //     const user_with_permission = db.prepare(`
 //         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
 //         user_permission.deletable AS deletable,
@@ -449,14 +453,23 @@ async fetch_like_dups_parent(DUPS_PARENT_ID){
 //         WHERE users.name = ? AND users.password = ?
 //     `).get(req.body.name, req.body.password);
 //     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
-//     db.prepare('INSERT INTO tags (dups_parent_id, tag) VALUES (?, ?)').run(req.body.dups_parent_id, req.body.tag) ? null : error_response(res, 'タグを追加できませんでした');
+
+//     // タグが存在しない場合は、タグを追加する
+//     let tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
+//     if(tag_id === null) {
+//         db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
+//         tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
+//     }
+//     db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+//         .run(req.body.dups_parent_id, tag_id, now(), now())
+//             ? null : error_response(res, 'タグを追加できませんでした');
 //     res.json({message: 'success'});
 //     } catch (error) {
 //         console.log(error);
 //         error_response(res, '原因不明のエラー' + error);
 //     }
 // });
-async fetch_add_tag(DUPS_PARENT_ID, TAG){
+async fetch_add_tag(DUPS_PARENT_ID){
     const res = await fetch('http://localhost:8000/add_tag', {
         method: 'POST',
         headers: {
@@ -465,8 +478,8 @@ async fetch_add_tag(DUPS_PARENT_ID, TAG){
         body: JSON.stringify({
             name: this.name,
             password: this.password,
+            tag: this.tag,
             dups_parent_id: DUPS_PARENT_ID,
-            tag: TAG,
         }),
     });
     const data = await res.json();
@@ -474,10 +487,22 @@ async fetch_add_tag(DUPS_PARENT_ID, TAG){
     console.log(data);
     await this.fetch_read_dups_parent();
 },
+
 // app.post('/read_all_tags', (req, res) => {
 //     try {
+//     const user_with_permission = db.prepare(`
+//         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+//         user_permission.deletable AS deletable,
+//         user_permission.writable AS writable,
+//         user_permission.readable AS readable,
+//         user_permission.likable AS likable
+//         FROM users
+//         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+//         WHERE users.name = ? AND users.password = ?
+//     `).get(req.body.name, req.body.password);
+//     user_with_permission.readable === 1 ? null : error_response(res, '読み込み権限がありません');
 //     const tags = db.prepare('SELECT * FROM tags').all();
-//     res.json({message: 'success', tags: tags});
+//     res.json({tags: tags});
 //     } catch (error) {
 //         console.log(error);
 //         error_response(res, '原因不明のエラー' + error);
@@ -500,6 +525,7 @@ async fetch_read_all_tags(){
     this.all_tags = data.tags;
 },
 
+
 // app.post('/delete_tag', (req, res) => {
 //     try {
 //     const user_with_permission = db.prepare(`
@@ -513,30 +539,16 @@ async fetch_read_all_tags(){
 //         WHERE users.name = ? AND users.password = ?
 //     `).get(req.body.name, req.body.password);
 //     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
-//     db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.id) ? null : error_response(res, 'タグを削除できませんでした');
+//     db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.tag_id);
+//     // 中間テーブルから該当のタグが全て削除された場合、タグテーブルからも削除する
+//     db.prepare('DELETE FROM tags WHERE id = ? AND id NOT IN (SELECT tag_id FROM dups_parent_tags)').run(req.body.tag_id);
 //     res.json({message: 'success'});
 //     } catch (error) {
 //         console.log(error);
 //         error_response(res, '原因不明のエラー' + error);
 //     }
 // });
-async fetch_delete_tag(TAG_ID){
-    const res = await fetch('http://localhost:8000/delete_tag', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            name: this.name,
-            password: this.password,
-            tag_id: TAG_ID,
-        }),
-    });
-    const data = await res.json();
-    // this.response_message = data;
-    console.log(data);
-    await this.fetch_read_all_tags();
-},
+
 
 }}).mount('.app');
 </script>
