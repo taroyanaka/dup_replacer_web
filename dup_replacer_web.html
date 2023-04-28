@@ -469,6 +469,69 @@ async fetch_add_tag(DUPS_PARENT_ID, TAG){
     console.log(data);
     await this.fetch_read_dups_parent();
 },
+// app.post('/read_all_tags', (req, res) => {
+//     try {
+//     const tags = db.prepare('SELECT * FROM tags').all();
+//     res.json({message: 'success', tags: tags});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
+async fetch_read_all_tags(){
+    const res = await fetch('http://localhost:8000/read_all_tags', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+        }),
+    });
+    const data = await res.json();
+    // this.response_message = data;
+    console.log(data);
+    this.all_tags = data.tags;
+},
+
+// app.post('/delete_tag', (req, res) => {
+//     try {
+//     const user_with_permission = db.prepare(`
+//         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+//         user_permission.deletable AS deletable,
+//         user_permission.writable AS writable,
+//         user_permission.readable AS readable,
+//         user_permission.likable AS likable
+//         FROM users
+//         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+//         WHERE users.name = ? AND users.password = ?
+//     `).get(req.body.name, req.body.password);
+//     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
+//     db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.id) ? null : error_response(res, 'タグを削除できませんでした');
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
+async fetch_delete_tag(TAG_ID){
+    const res = await fetch('http://localhost:8000/delete_tag', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            tag_id: TAG_ID,
+        }),
+    });
+    const data = await res.json();
+    // this.response_message = data;
+    console.log(data);
+    await this.fetch_read_all_tags();
+},
 
 }}).mount('.app');
 </script>

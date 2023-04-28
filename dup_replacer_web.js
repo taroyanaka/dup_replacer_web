@@ -244,7 +244,6 @@ app.post('/like_dups_parent', (req, res) => {
 // );
 app.post('/add_tag', (req, res) => {
     try {
-    // すでに同じタグが存在する場合はエラーを返す
     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, '10文字以内で入力して');
     db.prepare('SELECT * FROM tags WHERE dups_parent_id = ? AND tag = ?').get(req.body.dups_parent_id, req.body.tag) ? error_response(res, 'すでに同じタグが存在します') : null;
     const user_with_permission = db.prepare(`
@@ -289,7 +288,7 @@ app.post('/delete_tag', (req, res) => {
         WHERE users.name = ? AND users.password = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
-    db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.id) ? null : error_response(res, 'タグを削除できませんでした');
+    db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.tag_id) ? null : error_response(res, 'タグを削除できませんでした');
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
