@@ -53,13 +53,21 @@ CREATE TABLE dups (
   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 );
 
--- likeというブログの高評価ボタンのようなサービスのテーブル。IDは自動的に増加する。dups_parentのIDを外部キーとして持つ
+-- likesというブログの高評価ボタンのようなサービスのテーブル。IDは自動的に増加する。dups_parentのIDを外部キーとして持つ
 CREATE TABLE likes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   dups_parent_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
+  FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+);
+
+-- tagsというブログのタグのようなサービスのテーブル。IDは自動的に増加する。dups_parentのIDを外部キーとして持つ
+CREATE TABLE tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dups_parent_id INTEGER NOT NULL,
+  tag TEXT NOT NULL,
   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 );
 
@@ -82,3 +90,8 @@ created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, DATETIME('now'), DATETIME
 INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));
 INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (2, 'name1', 'password1', DATETIME('now'), DATETIME('now'));
 INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (2, 'name2', 'password2', DATETIME('now'), DATETIME('now'));
+
+-- likesにデータを3レコード挿入する
+-- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));
+-- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 2, DATETIME('now'), DATETIME('now'));
+-- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 3, DATETIME('now'), DATETIME('now'));

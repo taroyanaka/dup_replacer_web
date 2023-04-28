@@ -99,6 +99,7 @@ grid-template-areas:
 <div class="web_data_parent">
     <button @click="fetch_insert_dup">fetch_insert_dup</button>
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
+    <input type="text" v-model="tag" class="tag" placeholder="tag"><button @click="fetch_insert_dup_with_tag">fetch_insert_dup_with_tag</button>
 
     <ul>
     <li v-for="(item, index) in response_message">
@@ -151,6 +152,7 @@ return {
     name: 'name1',
     password: 'password1',
     response_message: '',
+    tag: 'tag1',
 }
 },
 watch: {
@@ -388,9 +390,22 @@ const INDEX_STRING = (INDEX).toString();
 
 // app.post('/like_dups_parent', (req, res) => {
 //     try {
-//     const user_with_permission = db.prepare('SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.role_id = user_permission.id WHERE users.name = ? AND users.password = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
+//     const user_with_permission = db.prepare(`
+//         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+//         user_permission.deletable AS deletable,
+//         user_permission.writable AS writable,
+//         user_permission.readable AS readable,
+//         user_permission.likable AS likable
+//         FROM users
+//         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+//         WHERE users.name = ? AND users.password = ?
+//     `).get(req.body.name, req.body.password);
+//         // console.log(user_with_permission);
 //     user_with_permission.likable === 1 ? null : error_response(res, 'いいね権限がありません');
-//     db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, DATETIME("now"), DATETIME("now"))').run(req.body.dups_parent_id, user_with_permission.id) ? null : error_response(res, 'いいねを追加できませんでした');
+//     console.log(req.body.dups_parent_id, user_with_permission.user_id, now(), now());
+//     db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+//         .run(req.body.dups_parent_id, user_with_permission.user_id, now(), now())
+//             ? null : error_response(res, 'いいねを追加できませんでした');
 //     res.json({message: 'success'});
 //     } catch (error) {
 //         console.log(error);
@@ -407,6 +422,46 @@ async fetch_like_dups_parent(DUPS_PARENT_ID){
             name: this.name,
             password: this.password,
             dups_parent_id: DUPS_PARENT_ID,
+        }),
+    });
+    const data = await res.json();
+    // this.response_message = data;
+    console.log(data);
+    await this.fetch_read_dups_parent();
+},
+
+// app.post('/add_tag', (req, res) => {
+//     try {
+//     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, '10文字以内で入力して');
+//     const user_with_permission = db.prepare(`
+//         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+//         user_permission.deletable AS deletable,
+//         user_permission.writable AS writable,
+//         user_permission.readable AS readable,
+//         user_permission.likable AS likable
+//         FROM users
+//         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+//         WHERE users.name = ? AND users.password = ?
+//     `).get(req.body.name, req.body.password);
+//     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
+//     db.prepare('INSERT INTO tags (dups_parent_id, tag) VALUES (?, ?)').run(req.body.dups_parent_id, req.body.tag) ? null : error_response(res, 'タグを追加できませんでした');
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
+async fetch_add_tag(DUPS_PARENT_ID, TAG){
+    const res = await fetch('http://localhost:8000/add_tag', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            dups_parent_id: DUPS_PARENT_ID,
+            tag: TAG,
         }),
     });
     const data = await res.json();
