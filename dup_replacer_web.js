@@ -53,6 +53,7 @@
 // INSERT INTO users (user_permission_id, name, password, created_at, updated_at) VALUES (2, 'name2', 'password2', DATETIME('now'), DATETIME('now'));
 
 
+const R = require('ramda');
 const express = require('express');
 const sqlite = require('better-sqlite3');
 const db = new sqlite('./dup.sqlite3');
@@ -132,11 +133,18 @@ function group_by_tags(data1) {
   
 // const group_rows_by_tags = group_by_tags(group_rows);
 // console.log(group_rows_by_tags);
-console.log(group_rows);
+// console.log(group_rows);
+group_rows2 = R.toPairs(group_rows).map(V=>V[1]);
+// group_rows2をR.equals(dataX[0], dataX[1])のように重複を削除する
+// group_rows2 = R.uniqWith(R.equals, group_rows2);
+
+console.log(group_rows2);
 // console.log(rows);
 
 // res.json(rows);
 res.json(group_rows);
+// res.json(group_rows2);
+// R.toPairs(app.to_ary(app.response_message)).map(V=>V[1])
 // res.json(group_rows_by_tags);
 
     // res.json(rows);
