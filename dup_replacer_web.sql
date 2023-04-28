@@ -63,13 +63,25 @@ CREATE TABLE likes (
   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 );
 
--- tagsというブログのタグのようなサービスのテーブル。IDは自動的に増加する。dups_parentのIDを外部キーとして持つ
-CREATE TABLE tags (
+-- dups_parentとtagsの中間テーブル
+CREATE TABLE dups_parent_tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   dups_parent_id INTEGER NOT NULL,
-  tag TEXT NOT NULL,
-  FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+  tag_id INTEGER NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id),
+  FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
+
+-- tagsというブログのタグのようなサービスのテーブル。IDは自動的に増加する。dups_parent_tagsを外部キーとして持つ
+CREATE TABLE tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tag TEXT NOT NULL
+);
+
+
+
 
 -- user_permissionにデータを2レコード挿入する
 INSERT INTO user_permission (id, permission,

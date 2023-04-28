@@ -236,16 +236,22 @@ app.post('/like_dups_parent', (req, res) => {
 });
 
 
+// CREATE TABLE dups_parent_tags (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   dups_parent_id INTEGER NOT NULL,
+//   tag_id INTEGER NOT NULL,
+//   created_at DATETIME NOT NULL,
+//   updated_at DATETIME NOT NULL,
+//   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id),
+//   FOREIGN KEY (tag_id) REFERENCES tags(id)
+// );
 // CREATE TABLE tags (
-//     id INTEGER PRIMARY KEY AUTOINCREMENT,
-//     dups_parent_id INTEGER NOT NULL,
-//     tag TEXT NOT NULL,
-//     FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   tag TEXT NOT NULL
 // );
 app.post('/add_tag', (req, res) => {
     try {
-    true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, '10文字以内で入力して');
-    db.prepare('SELECT * FROM tags WHERE dups_parent_id = ? AND tag = ?').get(req.body.dups_parent_id, req.body.tag) ? error_response(res, 'すでに同じタグが存在します') : null;
+    true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, 'タグは10文字以内で入力してください');
     const user_with_permission = db.prepare(`
         SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
@@ -257,7 +263,16 @@ app.post('/add_tag', (req, res) => {
         WHERE users.name = ? AND users.password = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
-    db.prepare('INSERT INTO tags (dups_parent_id, tag) VALUES (?, ?)').run(req.body.dups_parent_id, req.body.tag) ? null : error_response(res, 'タグを追加できませんでした');
+
+    // タグが存在しない場合は、タグを追加する
+    let tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
+    if(tag_id === null) {
+        db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
+        tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
+    }
+    db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+        .run(req.body.dups_parent_id, tag_id, now(), now())
+            ? null : error_response(res, 'タグを追加できませんでした');
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
@@ -267,13 +282,25 @@ app.post('/add_tag', (req, res) => {
 
 app.post('/read_all_tags', (req, res) => {
     try {
+    const user_with_permission = db.prepare(`
+        SELECT users.id AS user_id, users.name AS user_name, user_permission.permission AS user_permission,
+        user_permission.deletable AS deletable,
+        user_permission.writable AS writable,
+        user_permission.readable AS readable,
+        user_permission.likable AS likable
+        FROM users
+        LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+        WHERE users.name = ? AND users.password = ?
+    `).get(req.body.name, req.body.password);
+    user_with_permission.readable === 1 ? null : error_response(res, '読み込み権限がありません');
     const tags = db.prepare('SELECT * FROM tags').all();
-    res.json({message: 'success', tags: tags});
+    res.json({tags: tags});
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
     }
 });
+
 
 app.post('/delete_tag', (req, res) => {
     try {
@@ -288,7 +315,9 @@ app.post('/delete_tag', (req, res) => {
         WHERE users.name = ? AND users.password = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
-    db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.tag_id) ? null : error_response(res, 'タグを削除できませんでした');
+    db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.tag_id);
+    // 中間テーブルから該当のタグが全て削除された場合、タグテーブルからも削除する
+    db.prepare('DELETE FROM tags WHERE id = ? AND id NOT IN (SELECT tag_id FROM dups_parent_tags)').run(req.body.tag_id);
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
