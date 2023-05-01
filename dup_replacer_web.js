@@ -75,51 +75,33 @@ const true_if_within_10_characters_and_not_empty = (str) => str.length > 2 && st
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.get('/read_dups_parent', (req, res) => {
     try {
-
-
-// const rows = 
-// db.prepare(`
-//     SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at,
-//     dups.id AS dups_id,
-//     users.id AS users_id, users.username AS users_name,
-//     likes.id AS likes_id, likes.created_at AS likes_created_at, likes.updated_at AS likes_updated_at,
-//     tags.id AS tags_id, tags.tag AS tags_tag
-//     FROM dups_parent
-//     LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-//     LEFT JOIN users ON dups_parent.user_id = users.id
-//     LEFT JOIN likes ON dups_parent.id = likes.dups_parent_id
-//     JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-//     JOIN tags ON dups_parent_tags.tag_id = tags.id
-//     ORDER BY dups_parent.id DESC
-//     `).all();
-
-
-
-const rows = db.prepare(
-`SELECT
-dups_parent.id AS dups_parent_id,
-dups_parent.created_at AS dups_parent_created_at,
-dups_parent.updated_at AS dups_parent_updated_at,
-users.username AS user_name,
-dups.content_group_id AS dups_content_group_id,
-dups.content_1 AS dups_content_1,
-dups.content_2 AS dups_content_2,
-dups.content_3 AS dups_content_3,
-(SELECT COUNT(*)
-    FROM likes
-        WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-`).all();
-
-const get_tags = (dups_parent_id) => db.prepare(
+    const rows = db.prepare(
     `SELECT
-    GROUP_CONCAT(tags.tag) AS tags
-    FROM dups_parent
-    JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-    JOIN tags ON dups_parent_tags.tag_id = tags.id
-    WHERE dups_parent.id = ?
-`).all(dups_parent_id);
+    dups_parent.id AS dups_parent_id,
+    dups_parent.created_at AS dups_parent_created_at,
+    dups_parent.updated_at AS dups_parent_updated_at,
+    users.username AS user_name,
+    dups.content_group_id AS dups_content_group_id,
+    dups.content_1 AS dups_content_1,
+    dups.content_2 AS dups_content_2,
+    dups.content_3 AS dups_content_3,
+    (SELECT COUNT(*)
+        FROM likes
+            WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
+    FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+    `).all();
+
+
+    // 下記のget_tagsとgroupByは間違ったコードだが他の書き方がわからないのでとりあえずこれで動かす
+    const get_tags = (dups_parent_id) => db.prepare(
+        `SELECT
+        GROUP_CONCAT(tags.tag) AS tags
+        FROM dups_parent
+        JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+        JOIN tags ON dups_parent_tags.tag_id = tags.id
+        WHERE dups_parent.id = ?
+    `).all(dups_parent_id);
 
     function groupBy(array, key) {
         return array.reduce((result, currentValue) => {
@@ -128,23 +110,18 @@ const get_tags = (dups_parent_id) => db.prepare(
             );
             return result;
         }, {});
-    }
-        const new_rows = rows.map(item => {
-            return {
-              ...item, // 元のオブジェクトを展開
-              tags: get_tags(item.dups_parent_id) // dups_parent_idを追加
-            }
-          });
+    };
 
-          const group_rows = groupBy(new_rows, 'dups_parent_id');
-          console.log(group_rows);
+    const new_rows = rows.map(item => {
+        return {
+            ...item, // 元のオブジェクトを展開
+            tags: get_tags(item.dups_parent_id) // dups_parent_idを追加
+        }
+    });
+
+    const group_rows = groupBy(new_rows, 'dups_parent_id');
 
     res.json(group_rows);
-    
-
-
-// res.json(rows);
-    // res.json(rows);
     } catch (error) {
         console.log(error);
         error_response(res,
