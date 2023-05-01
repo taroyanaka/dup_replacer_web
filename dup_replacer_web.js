@@ -96,17 +96,31 @@ app.get('/read_dups_parent', (req, res) => {
 
 
 const rows = db.prepare(
-    `SELECT dups_parent.id AS dups_parent_id, dups_parent.created_at AS dups_parent_created_at, dups_parent.updated_at AS dups_parent_updated_at, users.username AS user_name, dups.content_group_id AS dups_content_group_id, dups.content_1 AS dups_content_1, dups.content_2 AS dups_content_2, dups.content_3 AS dups_content_3
-    ,
-    (SELECT GROUP_CONCAT(tags.tag, ',') FROM dups_parent_tags LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id WHERE dups_parent_tags.dups_parent_id = dups_parent.id) AS tags,
-    (SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
-    FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-    LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-    LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-
+`SELECT
+dups_parent.id AS dups_parent_id,
+dups_parent.created_at AS dups_parent_created_at,
+dups_parent.updated_at AS dups_parent_updated_at,
+users.username AS user_name,
+dups.content_group_id AS dups_content_group_id,
+dups.content_1 AS dups_content_1,
+dups.content_2 AS dups_content_2,
+dups.content_3 AS dups_content_3,
+(SELECT COUNT(*)
+    FROM likes
+        WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
 `).all();
-    // 上記をrowsをdups_parent_idとtag毎にまとめる関数
+
+const get_tags = (dups_parent_id) => db.prepare(
+    `SELECT
+    GROUP_CONCAT(tags.tag) AS tags
+    FROM dups_parent
+    JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+    JOIN tags ON dups_parent_tags.tag_id = tags.id
+    WHERE dups_parent.id = ?
+`).all(dups_parent_id);
+
     function groupBy(array, key) {
         return array.reduce((result, currentValue) => {
             (result[currentValue[key]] = result[currentValue[key]] || []).push(
@@ -115,10 +129,9 @@ const rows = db.prepare(
             return result;
         }, {});
     }
-    const group_rows = groupBy(rows, 'dups_parent_id');
-
-
-function group_by_tags(data1) {
+    
+    
+    function group_by_tags(data1) {
     return Object.keys(data1).reduce((data2, dups_parent_id) => {
       const dups_parent = data1[dups_parent_id][0];
       const [tags_id, tags_tag] = data1[dups_parent_id].reduce((acc, data) => {
@@ -129,24 +142,27 @@ function group_by_tags(data1) {
       data2[dups_parent_id][0].tags_tag = tags_tag.length ? tags_tag : null;
       return data2;
     }, {});
-}
-  
-// const group_rows_by_tags = group_by_tags(group_rows);
-// console.log(group_rows_by_tags);
-// console.log(group_rows);
-group_rows2 = R.toPairs(group_rows).map(V=>V[1]);
-// group_rows2をR.equals(dataX[0], dataX[1])のように重複を削除する
-// group_rows2 = R.uniqWith(R.equals, group_rows2);
+    }
+    
+    // console.log(
+    //     Object.keys(group_rows)
+    //         .map((dups_parent_id) => get_tags(dups_parent_id))
+    //     );
+        const new_rows = rows.map(item => {
+            return {
+              ...item, // 元のオブジェクトを展開
+              tags: get_tags(item.dups_parent_id) // dups_parent_idを追加
+            }
+          });
+        //   const group_rows = groupBy(rows, 'dups_parent_id');
+          const group_rows = groupBy(new_rows, 'dups_parent_id');
+          console.log(group_rows);
 
-console.log(group_rows2);
-// console.log(rows);
+    res.json(group_rows);
+    
+
 
 // res.json(rows);
-res.json(group_rows);
-// res.json(group_rows2);
-// R.toPairs(app.to_ary(app.response_message)).map(V=>V[1])
-// res.json(group_rows_by_tags);
-
     // res.json(rows);
     } catch (error) {
         console.log(error);

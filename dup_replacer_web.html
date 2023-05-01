@@ -123,7 +123,7 @@ grid-template-areas:
         <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
         <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
         <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
-        <div><span>tags: </span><span>{{ ITEM_1.tags ? ITEM_1.tags.split(",") : null }}</span></div>
+        <div><span>tags: </span><span>{{ ITEM_1.tags ? ITEM_1.tags[0].tags : null }}</span></div>
     </div>
     </template>
     </li>
