@@ -129,32 +129,13 @@ const get_tags = (dups_parent_id) => db.prepare(
             return result;
         }, {});
     }
-    
-    
-    function group_by_tags(data1) {
-    return Object.keys(data1).reduce((data2, dups_parent_id) => {
-      const dups_parent = data1[dups_parent_id][0];
-      const [tags_id, tags_tag] = data1[dups_parent_id].reduce((acc, data) => {
-        return [acc[0].concat(data.tags_id), acc[1].concat(data.tags_tag)];
-      }, [[], []]);
-      data2[dups_parent_id] = [dups_parent];
-      data2[dups_parent_id][0].tags_id = tags_id.length ? tags_id : null;
-      data2[dups_parent_id][0].tags_tag = tags_tag.length ? tags_tag : null;
-      return data2;
-    }, {});
-    }
-    
-    // console.log(
-    //     Object.keys(group_rows)
-    //         .map((dups_parent_id) => get_tags(dups_parent_id))
-    //     );
         const new_rows = rows.map(item => {
             return {
               ...item, // 元のオブジェクトを展開
               tags: get_tags(item.dups_parent_id) // dups_parent_idを追加
             }
           });
-        //   const group_rows = groupBy(rows, 'dups_parent_id');
+
           const group_rows = groupBy(new_rows, 'dups_parent_id');
           console.log(group_rows);
 
