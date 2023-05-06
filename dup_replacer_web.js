@@ -279,26 +279,15 @@ app.post('/add_tag', (req, res) => {
     `).get(req.body.name, req.body.password);
     user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
     let tag = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag);
-    // .id;
-    // console.log(tag);
-    if(tag === undefined) {
-        console.log('tagがundefined');
-        db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
-        const tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id;
-        db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
-            .run(req.body.dups_parent_id, tag_id, now(), now());
-            res.json({message: 'success'});
-    }else{
-        console.log('tagがundefinedじゃない');
-        console.log(tag);
-            const tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id
-            db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
-                .run(req.body.dups_parent_id, tag_id, now(), now());
-                res.json({message: 'success'});
-    };
-    // db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
-    //     .run(req.body.dups_parent_id, tag_id, now(), now())
-    //         ? null : error_response(res, 'タグを追加できませんでした');
+
+    tag === undefined ? null : error_response(res, 'タグを追加できませんでした');
+    tag === undefined ? null : db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
+    const tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id
+
+    db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+        .run(req.body.dups_parent_id, tag_id, now(), now());
+        res.json({message: 'success'});
+
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
