@@ -131,7 +131,10 @@ app.get('/read_dups_parent', (req, res) => {
 
 
 // expressの一般的なエラーのレスポンス。引数としてエラー文字列を含めて呼び出す
-const error_response = (res, error_message) => res.status(400).json({ error: error_message });
+const error_response = (res, error_message) => {
+    res.json({error: error_message});
+    return new Error(error_message);
+};
 
 // '/insert_dup'というPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを作成する。
 app.post('/insert_dup', (req, res) => {
@@ -265,8 +268,12 @@ app.post('/like_dups_parent', (req, res) => {
 // );
 app.post('/add_tag', (req, res) => {
     try {
-        console.log(req.body.tag);
-    true_if_within_10_characters_and_not_empty(req.body.tag) ? null : error_response(res, 'タグは10文字以内で入力してください');
+        // error_response(res, 'foo bar');
+        // error_response(res, 'foo bar2');
+    console.log(req.body.tag);
+    // true_if_within_10_characters_and_not_empty(req.body.tag) ? null : throw "myException";
+    true_if_within_10_characters_and_not_empty(req.body.tag) ? null : (()=>{throw new Error('10文字以内で入力してください')})();
+
     const user_with_permission = db.prepare(`
         SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
@@ -277,20 +284,29 @@ app.post('/add_tag', (req, res) => {
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
-    user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
-    let tag = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag);
+    // user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
+    user_with_permission.writable === 1 ? null : (()=>{throw new Error('書き込み権限がありません')})();
 
-    tag === undefined ? null : error_response(res, 'タグを追加できませんでした');
-    tag === undefined ? null : db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
-    const tag_id = db.prepare('SELECT id FROM tags WHERE tag = ?').get(req.body.tag).id
+    // db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) === undefined ? null : error_response(res, '同じタグが既に存在します');
+    db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) === undefined ? null : (()=>{throw new Error('同じタグが既に存在します')})();
 
-    db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
-        .run(req.body.dups_parent_id, tag_id, now(), now());
-        res.json({message: 'success'});
+    let tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
+    console.log(tag);
+
+    tag === undefined ? db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag) : null;
+    tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
+    const tag_id = tag === undefined ? null : tag.id;
+    console.log(tag_id);
+
+    if(tag_id !== null){
+        db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+            .run(req.body.dups_parent_id, tag_id, now(), now());
+            res.json({message: 'success'});
+    }
 
     } catch (error) {
         console.log(error);
-        error_response(res, '原因不明のエラー' + error);
+        error_response(res, 'ERROR: ' + error);
     }
 });
 
