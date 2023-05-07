@@ -75,8 +75,9 @@ const true_if_within_10_characters_and_not_empty = (str) => str.length > 2 && st
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.get('/read_dups_parent', (req, res) => {
     try {
-    const rows = db.prepare(
-    `SELECT
+        console.log(req.body.ORDER_BY);
+    let rows;
+    const standard_read_queries = `SELECT
     dups_parent.id AS dups_parent_id,
     dups_parent.created_at AS dups_parent_created_at,
     dups_parent.updated_at AS dups_parent_updated_at,
@@ -89,9 +90,18 @@ app.get('/read_dups_parent', (req, res) => {
         FROM likes
             WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
     FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-    `).all();
-
+    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id`;
+    switch (true) {
+    case req.body.ORDER_BY === undefined || req.body.ASC_OR_DESC === undefined:
+        rows = db.prepare(standard_read_queries).all(); break;
+    case req.body.ORDER_BY === "likes_count" && req.body.ASC_OR_DESC === 'ASC':
+        rows = db.prepare(standard_read_queries + 'ORDER BY likes_count ASC').all(); break;
+    case req.body.ORDER_BY === "likes_count" && req.body.ASC_OR_DESC === 'DESC':
+        rows = db.prepare(standard_read_queries + 'ORDER BY likes_count DESC').all(); break;
+    default:
+        // マッチする条件がない場合の処理
+        break;
+    }
 
     // 下記のget_tagsとgroupByは間違ったコードだが他の書き方がわからないのでとりあえずこれで動かす
     const get_tags = (dups_parent_id) => db.prepare(
