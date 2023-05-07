@@ -241,6 +241,10 @@ app.post('/like_dups_parent', (req, res) => {
     `).get(req.body.name, req.body.password);
         // console.log(user_with_permission);
     user_with_permission.likable === 1 ? null : (()=>{throw new Error('いいね権限がありません')})();
+// 既にいいねしているかどうかを確認する
+    const already_liked = db.prepare('SELECT * FROM likes WHERE dups_parent_id = ? AND user_id = ?').get(req.body.dups_parent_id, user_with_permission.user_id);
+    already_liked ? (()=>{throw new Error('既にいいねしています')})() : null;
+
     console.log(req.body.dups_parent_id, user_with_permission.user_id, now(), now());
     db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
         .run(req.body.dups_parent_id, user_with_permission.user_id, now(), now())
