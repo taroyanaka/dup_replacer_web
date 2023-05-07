@@ -295,11 +295,6 @@ app.post('/add_tag', (req, res) => {
         : db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)').run(req.body.dups_parent_id, tag_id, now(), now());
     res.json({message: 'success'});
 
-
-
-
-
-
     // db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) === undefined ? null : (()=>{throw new Error('同じタグが既に存在します')})();
     // let tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
     // tag === undefined ? db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag) : null;
