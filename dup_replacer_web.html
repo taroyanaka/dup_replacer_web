@@ -97,6 +97,11 @@ grid-template-areas:
 </div>
 
 <div class="web_data_parent">
+    <input type="text" v-model="name" class="name" placeholder="name">
+    <input type="text" v-model="password" class="password" placeholder="password">
+    <button @click="switch_user">switch_user</button>
+
+
     <button @click="fetch_insert_dup">fetch_insert_dup</button>
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
     <input type="text" v-model="tag" class="tag" placeholder="tag">
@@ -548,6 +553,27 @@ async fetch_read_all_tags(){
 //     }
 // });
 
+
+
+
+
+switch_user(){
+    if(this.name === 'name1' && this.password === 'password1'){
+        this.name = 'name2';
+        this.password = 'password2';
+        return;
+    }
+    if(this.name === 'name2' && this.password === 'password2'){
+        this.name = 'GUEST';
+        this.password = 'GUEST_PASS';
+        return;
+    }
+    if(this.name === 'GUEST' && this.password === 'GUEST_PASS'){
+        this.name = 'name1';
+        this.password = 'password1';
+        return;
+    }
+},
 
 }}).mount('.app');
 </script>

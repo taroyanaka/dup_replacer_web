@@ -107,3 +107,91 @@ INSERT INTO users (user_permission_id, username, userpassword, created_at, updat
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 2, DATETIME('now'), DATETIME('now'));
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 3, DATETIME('now'), DATETIME('now'));
+
+SELECT
+dups_parent.id AS dups_parent_id
+,dups.content_1 AS dups_content_1
+-- tagがない場合は空文字を返し、ある場合はカンマ区切りで返す
+-- ,IFNULL(GROUP_CONCAT(tags.tag, ', '), NULL) as res
+,(SELECT
+    IFNULL(GROUP_CONCAT(tags.tag, ', '), 'NO_TAG') as RESULT
+    FROM dups_parent
+    LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+    LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+    WHERE dups_parent.id = 8)
+      AS FOO
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+-- LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+-- LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+WHERE users.username = 'name1';
+
+
+
+SELECT
+dups_parent.id AS dups_parent_id
+,dups.content_1 AS dups_content_1
+-- tagがない場合は空文字を返し、ある場合はカンマ区切りで返す
+-- ,IFNULL(GROUP_CONCAT(tags.tag, ', '), "ZZZZZZZ") as tags
+-- ,GROUP_CONCAT(tags.tag, ', ') as tags
+,tags.tag AS tags_tag
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+WHERE users.username = 'name1';
+
+
+SELECT
+IFNULL(GROUP_CONCAT(tags.tag, ', '), "ZZZZZZZ") as tags
+FROM dups_parent
+LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+WHERE dups_parent.id = 9;
+
+
+SELECT
+dups_parent_tags.id AS dups_parent_tags_id
+,dups_parent_tags.dups_parent_id AS dups_parent_tags_dups_parent_id
+,dups_parent_tags.tag_id AS dups_parent_tags_tag_id
+,tags.id AS tags_id
+,tags.tag AS tags_tag
+FROM dups_parent
+LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+WHERE dups_parent.id = 9;
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+dups_parent.id AS FOO
+,dups.content_1 AS dups_content_1
+,(SELECT
+dups_parent.id AS THE_ID
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+WHERE users.username = 'name1')
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+WHERE users.username = 'name1';
+
+
+
+
+
+
+
+(SELECT
+dups_parent.id AS THE_ID
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+WHERE users.username = 'name1')
