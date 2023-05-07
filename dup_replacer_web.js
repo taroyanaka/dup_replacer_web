@@ -78,19 +78,19 @@ app.get('/read_dups_parent', (req, res) => {
         console.log(req.body.ORDER_BY);
     let rows;
     const standard_read_queries = `SELECT
-    dups_parent.id AS dups_parent_id,
-    dups_parent.created_at AS dups_parent_created_at,
-    dups_parent.updated_at AS dups_parent_updated_at,
-    users.username AS user_name,
-    dups.content_group_id AS dups_content_group_id,
-    dups.content_1 AS dups_content_1,
-    dups.content_2 AS dups_content_2,
-    dups.content_3 AS dups_content_3,
-    (SELECT COUNT(*)
-        FROM likes
-            WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
-    FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id`;
+dups_parent.id AS dups_parent_id,
+dups_parent.created_at AS dups_parent_created_at,
+dups_parent.updated_at AS dups_parent_updated_at,
+users.username AS user_name,
+dups.content_group_id AS dups_content_group_id,
+dups.content_1 AS dups_content_1,
+dups.content_2 AS dups_content_2,
+dups.content_3 AS dups_content_3,
+(SELECT COUNT(*)
+    FROM likes
+        WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id`;
     switch (true) {
     case req.body.ORDER_BY === undefined || req.body.ASC_OR_DESC === undefined:
         rows = db.prepare(standard_read_queries).all(); break;
