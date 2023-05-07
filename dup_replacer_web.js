@@ -133,7 +133,7 @@ app.get('/read_dups_parent', (req, res) => {
 // expressの一般的なエラーのレスポンス。引数としてエラー文字列を含めて呼び出す
 const error_response = (res, error_message) => {
     res.json({error: error_message});
-    return new Error(error_message);
+    // return new Error(error_message);
 };
 
 // '/insert_dup'というPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを作成する。
@@ -141,7 +141,7 @@ app.post('/insert_dup', (req, res) => {
     // console.log(req.body.B_C_list);
     try {
     req.body.B_C_list.forEach((EACH_CONTENT) => {
-        true_if_within_4000_characters_and_not_empty(EACH_CONTENT.join("")) ? null : error_response(res, '4000文字以内で入力して');
+        true_if_within_4000_characters_and_not_empty(EACH_CONTENT.join("")) ? null : (()=>{throw new Error('4000文字以内で入力して')})();
     });
     const user_with_permission = db.prepare(`
         SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
@@ -153,16 +153,16 @@ app.post('/insert_dup', (req, res) => {
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
-    user_with_permission ? null : error_response(res, 'ユーザーが存在しません');
+    user_with_permission ? null : (()=>{throw new Error('ユーザーが存在しません')})();
     // console.log(user_with_permission);
-    user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
-    db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, ?, ?)').run(user_with_permission.user_id, now(), now()) ? null : error_response(res, 'dups_parentに追加できませんでした');
+    user_with_permission.writable === 1 ? null : (()=>{throw new Error('書き込み権限がありません')})();
+    db.prepare('INSERT INTO dups_parent (user_id, created_at, updated_at) VALUES (?, ?, ?)').run(user_with_permission.user_id, now(), now()) ? null : (()=>{throw new Error('dups_parentに追加できませんでした')})();
     const dups_parent_id = db.prepare('SELECT id FROM dups_parent ORDER BY id DESC LIMIT 1').get().id;
     console.log(dups_parent_id);
     req.body.B_C_list.forEach((EACH_CONTENT, CONTENT_GROUP_ID) => {
         console.log(EACH_CONTENT);
         db.prepare('INSERT INTO dups (dups_parent_id, content_group_id, content_1, content_2, content_3) VALUES (?, ?, ?, ?, ?)')
-            .run(dups_parent_id, CONTENT_GROUP_ID, EACH_CONTENT[0], EACH_CONTENT[1], EACH_CONTENT[2]) ? null : error_response(res, 'dupsに追加できませんでした');
+            .run(dups_parent_id, CONTENT_GROUP_ID, EACH_CONTENT[0], EACH_CONTENT[1], EACH_CONTENT[2]) ? null : (()=>{throw new Error('dupsに追加できませんでした')})();
 
     });
 
@@ -181,10 +181,10 @@ app.post('/insert_dup', (req, res) => {
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.post('/delete_dup', (req, res) => {
     try {
-    const user_with_permission = db.prepare('SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.user_permission_id = user_permission.id WHERE users.username = ? AND users.userpassword = ?').get(req.body.name, req.body.password) ? null : error_response(res, 'ユーザーが存在しません');
-    user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
-    db.prepare('DELETE FROM dups WHERE dups_parent_id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dupsを削除できませんでした');
-    db.prepare('DELETE FROM dups_parent WHERE id = ?').run(req.body.dups_parent_id) ? null : error_response(res, 'dups_parentを削除できませんでした');
+    const user_with_permission = db.prepare('SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission FROM users LEFT JOIN user_permission ON users.user_permission_id = user_permission.id WHERE users.username = ? AND users.userpassword = ?').get(req.body.name, req.body.password) ? null : (()=>{throw new Error('ユーザーが存在しません')})();
+    user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+    db.prepare('DELETE FROM dups WHERE dups_parent_id = ?').run(req.body.dups_parent_id) ? null : (()=>{throw new Error('dupsを削除できませんでした')})();
+    db.prepare('DELETE FROM dups_parent WHERE id = ?').run(req.body.dups_parent_id) ? null : (()=>{throw new Error('dups_parentを削除できませんでした')})();
     res.json({message: 'success'});
 
     } catch (error) {
@@ -206,13 +206,13 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
-    user_with_permission ? null : error_response(res, 'ユーザーが存在しません');
+    user_with_permission ? null : (()=>{throw new Error('ユーザーが存在しません')})();
 
-    user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
-    db.prepare('DELETE FROM dups').run() ? null : error_response(res, 'dupsを削除できませんでした');
-    db.prepare('DELETE FROM dups_parent_tags').run() ? null : error_response(res, 'dups_parent_tagsを削除できませんでした');
-    db.prepare('DELETE FROM tags').run() ? null : error_response(res, 'tagsを削除できませんでした');
-    db.prepare('DELETE FROM dups_parent').run() ? null : error_response(res, 'dups_parentを削除できませんでした');
+    user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+    db.prepare('DELETE FROM dups').run() ? null : (()=>{throw new Error('dupsを削除できませんでした')})();
+    db.prepare('DELETE FROM dups_parent_tags').run() ? null : (()=>{throw new Error('dups_parent_tagsを削除できませんでした')})();
+    db.prepare('DELETE FROM tags').run() ? null : (()=>{throw new Error('tagsを削除できませんでした')})();
+    db.prepare('DELETE FROM dups_parent').run() ? null : (()=>{throw new Error('dups_parentを削除できませんでした')})();
     res.json({message: 'success'});
 
     } catch (error) {
@@ -240,11 +240,11 @@ app.post('/like_dups_parent', (req, res) => {
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
         // console.log(user_with_permission);
-    user_with_permission.likable === 1 ? null : error_response(res, 'いいね権限がありません');
+    user_with_permission.likable === 1 ? null : (()=>{throw new Error('いいね権限がありません')})();
     console.log(req.body.dups_parent_id, user_with_permission.user_id, now(), now());
     db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
         .run(req.body.dups_parent_id, user_with_permission.user_id, now(), now())
-            ? null : error_response(res, 'いいねを追加できませんでした');
+            ? null : (()=>{throw new Error('いいねを追加できませんでした')})();
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
@@ -266,14 +266,10 @@ app.post('/like_dups_parent', (req, res) => {
 //   id INTEGER PRIMARY KEY AUTOINCREMENT,
 //   tag TEXT NOT NULL
 // );
+
 app.post('/add_tag', (req, res) => {
     try {
-        // error_response(res, 'foo bar');
-        // error_response(res, 'foo bar2');
-    console.log(req.body.tag);
-    // true_if_within_10_characters_and_not_empty(req.body.tag) ? null : throw "myException";
     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : (()=>{throw new Error('10文字以内で入力してください')})();
-
     const user_with_permission = db.prepare(`
         SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
         user_permission.deletable AS deletable,
@@ -284,26 +280,36 @@ app.post('/add_tag', (req, res) => {
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
-    // user_with_permission.writable === 1 ? null : error_response(res, '書き込み権限がありません');
     user_with_permission.writable === 1 ? null : (()=>{throw new Error('書き込み権限がありません')})();
 
-    // db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) === undefined ? null : error_response(res, '同じタグが既に存在します');
-    db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) === undefined ? null : (()=>{throw new Error('同じタグが既に存在します')})();
+    // 同じタグがあればtagテーブルには追加しない
+    // 同じタグがなければtagテーブルに追加する
+    db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) ? null : db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag);
+    const tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
+    const tag_id = tag.id;
 
-    let tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
-    console.log(tag);
+    // dups_parentと紐づいたdups_parent_tagsがあればdups_parent_tagsに追加しない
+    // dups_parentと紐づいたdups_parent_tagsがなければdups_parent_tagsに追加する
+    db.prepare('SELECT * FROM dups_parent_tags WHERE dups_parent_id = ? AND tag_id = ?').get(req.body.dups_parent_id, tag_id)
+        ? null
+        : db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)').run(req.body.dups_parent_id, tag_id, now(), now());
+    res.json({message: 'success'});
 
-    tag === undefined ? db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag) : null;
-    tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
-    const tag_id = tag === undefined ? null : tag.id;
-    console.log(tag_id);
 
-    if(tag_id !== null){
-        db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
-            .run(req.body.dups_parent_id, tag_id, now(), now());
-            res.json({message: 'success'});
-    }
 
+
+
+
+    // db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag) === undefined ? null : (()=>{throw new Error('同じタグが既に存在します')})();
+    // let tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
+    // tag === undefined ? db.prepare('INSERT INTO tags (tag) VALUES (?)').run(req.body.tag) : null;
+    // tag = db.prepare('SELECT * FROM tags WHERE tag = ?').get(req.body.tag);
+    // const tag_id = tag === undefined ? null : tag.id;
+    // if(tag_id !== null){
+        // db.prepare('INSERT INTO dups_parent_tags (dups_parent_id, tag_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
+            // .run(req.body.dups_parent_id, tag_id, now(), now());
+            // res.json({message: 'success'});
+    // }
     } catch (error) {
         console.log(error);
         error_response(res, 'ERROR: ' + error);
@@ -322,7 +328,7 @@ app.post('/read_all_tags', (req, res) => {
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
-    user_with_permission.readable === 1 ? null : error_response(res, '読み込み権限がありません');
+    user_with_permission.readable === 1 ? null : (()=>{throw new Error('読み込み権限がありません')})();
     const tags = db.prepare('SELECT * FROM tags').all();
     res.json({tags: tags});
     } catch (error) {
@@ -344,7 +350,7 @@ app.post('/delete_tag', (req, res) => {
         LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
-    user_with_permission.deletable === 1 ? null : error_response(res, '削除権限がありません');
+    user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
     db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.tag_id);
     // 中間テーブルから該当のタグが全て削除された場合、タグテーブルからも削除する
     db.prepare('DELETE FROM tags WHERE id = ? AND id NOT IN (SELECT tag_id FROM dups_parent_tags)').run(req.body.tag_id);
@@ -354,4 +360,3 @@ app.post('/delete_tag', (req, res) => {
         error_response(res, '原因不明のエラー' + error);
     }
 });
-1
