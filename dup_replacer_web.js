@@ -211,6 +211,7 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
     db.prepare('DELETE FROM dups').run() ? null : (()=>{throw new Error('dupsを削除できませんでした')})();
     db.prepare('DELETE FROM dups_parent_tags').run() ? null : (()=>{throw new Error('dups_parent_tagsを削除できませんでした')})();
+    db.prepara('DELETE FROM likes').run() ? null : (()=>{throw new Error('likesを削除できませんでした')})();
     db.prepare('DELETE FROM tags').run() ? null : (()=>{throw new Error('tagsを削除できませんでした')})();
     db.prepare('DELETE FROM dups_parent').run() ? null : (()=>{throw new Error('dups_parentを削除できませんでした')})();
     res.json({message: 'success'});
@@ -350,6 +351,7 @@ app.post('/delete_tag', (req, res) => {
         WHERE users.username = ? AND users.userpassword = ?
     `).get(req.body.name, req.body.password);
     user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+
     db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.tag_id);
     // 中間テーブルから該当のタグが全て削除された場合、タグテーブルからも削除する
     db.prepare('DELETE FROM tags WHERE id = ? AND id NOT IN (SELECT tag_id FROM dups_parent_tags)').run(req.body.tag_id);
