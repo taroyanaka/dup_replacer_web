@@ -116,6 +116,7 @@ grid-template-areas:
     <button class="accent_color_2" @click="fetch_add_tag(item[0]['dups_parent_id'])">fetch_add_tag</button>
     <!-- <span>likes_count: </span><span>{{ item[0].likes_count }}</span> -->
     <button @click="fetch_like_dups_parent(item[0]['dups_parent_id'])">fetch_like_dups_parent</button>
+    <button @click="fetch_delete_like_dups_parent(item[0]['dups_parent_id'])">fetch_delete_like_dups_parent</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
         <!-- <span>{{ITEM_1}}</span> -->
     <div>
@@ -438,7 +439,38 @@ async fetch_like_dups_parent(DUPS_PARENT_ID){
         }),
     });
     const data = await res.json();
-    // this.response_message = data;
+    console.log(data);
+    await this.fetch_read_dups_parent();
+},
+
+// app.post('/delete_like_dups_parent', (req, res) => {
+//     try {
+//     const user_with_permission = get_user_with_permission(req);
+//     user_with_permission.likable === 1 ? null : (()=>{throw new Error('いいね権限がありません')})();
+//     // 既にいいねしているかどうかを確認する
+//     const already_liked = db.prepare('SELECT * FROM likes WHERE dups_parent_id = ? AND user_id = ?').get(req.body.dups_parent_id, user_with_permission.user_id);
+//     already_liked ? null : (()=>{throw new Error('いいねしていません')})();
+//     db.prepare('DELETE FROM likes WHERE dups_parent_id = ? AND user_id = ?').run(req.body.dups_parent_id, user_with_permission.user_id)
+//         ? null : (()=>{throw new Error('いいねを削除できませんでした')})();
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
+async fetch_delete_like_dups_parent(DUPS_PARENT_ID){
+    const res = await fetch('http://localhost:8000/delete_like_dups_parent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            dups_parent_id: DUPS_PARENT_ID,
+        }),
+    });
+    const data = await res.json();
     console.log(data);
     await this.fetch_read_dups_parent();
 },

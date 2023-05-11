@@ -80,9 +80,6 @@
 //   tag TEXT NOT NULL
 // );
 
-
-
-
 // -- user_permissionにデータを2レコード挿入する
 // INSERT INTO user_permission (id, permission,
 // readable,
@@ -96,7 +93,6 @@
 // deletable,
 // likable,
 // created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, DATETIME('now'), DATETIME('now'));
-
 
 // -- usersにデータを3レコード挿入する
 // INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));
@@ -243,7 +239,6 @@ app.post('/delete_dup', (req, res) => {
     db.prepare('DELETE FROM dups WHERE dups_parent_id = ?').run(req.body.dups_parent_id) ? null : (()=>{throw new Error('dupsを削除できませんでした')})();
     db.prepare('DELETE FROM dups_parent WHERE id = ?').run(req.body.dups_parent_id) ? null : (()=>{throw new Error('dups_parentを削除できませんでした')})();
     res.json({message: 'success'});
-
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
@@ -253,10 +248,8 @@ app.post('/delete_dup', (req, res) => {
 // delete_all_dups_and_dups_parentというPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを全て削除する。
 app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     try {
-        console.log(req.body);
     const user_with_permission = get_user_with_permission(req);
     user_with_permission ? null : (()=>{throw new Error('ユーザーが存在しません')})();
-
     user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
     db.prepare('DELETE FROM dups').run() ? null : (()=>{throw new Error('dupsを削除できませんでした')})();
     db.prepare('DELETE FROM dups_parent_tags').run() ? null : (()=>{throw new Error('dups_parent_tagsを削除できませんでした')})();
@@ -264,7 +257,6 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     db.prepare('DELETE FROM tags').run() ? null : (()=>{throw new Error('tagsを削除できませんでした')})();
     db.prepare('DELETE FROM dups_parent').run() ? null : (()=>{throw new Error('dups_parentを削除できませんでした')})();
     res.json({message: 'success'});
-
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
@@ -287,6 +279,22 @@ app.post('/like_dups_parent', (req, res) => {
     db.prepare('INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)')
         .run(req.body.dups_parent_id, user_with_permission.user_id, now(), now())
             ? null : (()=>{throw new Error('いいねを追加できませんでした')})();
+    res.json({message: 'success'});
+    } catch (error) {
+        console.log(error);
+        error_response(res, '原因不明のエラー' + error);
+    }
+});
+
+app.post('/delete_like_dups_parent', (req, res) => {
+    try {
+    const user_with_permission = get_user_with_permission(req);
+    user_with_permission.likable === 1 ? null : (()=>{throw new Error('いいね権限がありません')})();
+    // 既にいいねしているかどうかを確認する
+    const already_liked = db.prepare('SELECT * FROM likes WHERE dups_parent_id = ? AND user_id = ?').get(req.body.dups_parent_id, user_with_permission.user_id);
+    already_liked ? null : (()=>{throw new Error('いいねしていません')})();
+    db.prepare('DELETE FROM likes WHERE dups_parent_id = ? AND user_id = ?').run(req.body.dups_parent_id, user_with_permission.user_id)
+        ? null : (()=>{throw new Error('いいねを削除できませんでした')})();
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
@@ -325,7 +333,6 @@ app.post('/read_all_tags', (req, res) => {
         error_response(res, '原因不明のエラー' + error);
     }
 });
-
 
 app.post('/delete_tag', (req, res) => {
     try {
