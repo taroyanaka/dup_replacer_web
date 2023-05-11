@@ -321,6 +321,8 @@ app.post('/add_tag', (req, res) => {
         error_response(res, 'ERROR: ' + error);
     }
 });
+
+// 該当tagを全部削除するAPI
 app.post('/delete_tag', (req, res) => {
     try {
     const user_with_permission = get_user_with_permission(req);
@@ -334,6 +336,8 @@ app.post('/delete_tag', (req, res) => {
         error_response(res, '原因不明のエラー' + error);
     }
 });
+
+// tagを紐づくdups_parent_tagsから削除し、利用されていなければtagsテーブルからも削除するAPI
 app.post('/delete_dups_parent_tags', (req, res) => {
     try {
     const user_with_permission = get_user_with_permission(req);
