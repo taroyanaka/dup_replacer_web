@@ -321,6 +321,34 @@ app.post('/add_tag', (req, res) => {
         error_response(res, 'ERROR: ' + error);
     }
 });
+app.post('/delete_tag', (req, res) => {
+    try {
+    const user_with_permission = get_user_with_permission(req);
+    user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+    db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.id);
+    // tagsテーブルから削除したタグに紐づいたdups_parent_tagsを削除する
+    db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.id);
+    res.json({message: 'success'});
+    } catch (error) {
+        console.log(error);
+        error_response(res, '原因不明のエラー' + error);
+    }
+});
+app.post('/delete_dups_parent_tags', (req, res) => {
+    try {
+    const user_with_permission = get_user_with_permission(req);
+    user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+    db.prepare('DELETE FROM dups_parent_tags WHERE dups_parent_id = ? AND tag_id = ?').run(req.body.dups_parent_id, req.body.tag_id);
+    // dups_parent_tagsテーブルから削除したdups_parentに紐づいたタグが他になければtagsテーブルからも削除する
+    if(!db.prepare('SELECT * FROM dups_parent_tags WHERE tag_id = ?').get(req.body.tag_id)){
+        db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.tag_id);
+    };
+    res.json({message: 'success'});
+    } catch (error) {
+        console.log(error);
+        error_response(res, '原因不明のエラー' + error);
+    }
+});
 
 app.post('/read_all_tags', (req, res) => {
     try {
