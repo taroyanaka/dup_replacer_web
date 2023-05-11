@@ -337,7 +337,7 @@ app.post('/delete_tag', (req, res) => {
     }
 });
 
-// tagを紐づくdups_parent_tagsから削除し、利用されていなければtagsテーブルからも削除するAPI
+// dups_parent_tagsを削除し、tagが他で利用されていなければtagsテーブルからも削除するAPI
 app.post('/delete_dups_parent_tags', (req, res) => {
     try {
     const user_with_permission = get_user_with_permission(req);
