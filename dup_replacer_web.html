@@ -106,10 +106,22 @@ grid-template-areas:
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
     <input type="text" v-model="tag" class="tag" placeholder="tag">
 
-    <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag">
-    <ul>
+    <div>
+    <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
+    <datalist id="autocomplete-list">
+        <option v-for="item in auto_complete_tags" :key="item" :value="item"></option>
+    </datalist>
+    </div>
+
+    <!-- <ul>
         <li v-for="(item, index) in auto_complete_tags" @click="tag = item">AAA {{ item }}</li>
     </ul>
+    <div>
+        <input type="text" v-model="inputText" list="autocomplete-list" />
+        <datalist id="autocomplete-list">
+          <option v-for="item in autocompleteItems" :key="item" :value="item"></option>
+        </datalist>
+    </div> -->
     
 
     <ul>
