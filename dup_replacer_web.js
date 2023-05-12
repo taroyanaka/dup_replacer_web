@@ -76,8 +76,28 @@
 
 // -- tagsというブログのタグのようなサービスのテーブル。IDは自動的に増加する。dups_parent_tagsを外部キーとして持つ
 // CREATE TABLE tags (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   tag TEXT NOT NULL
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     tag TEXT NOT NULL
+// );
+
+// CREATE TABLE comments (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     dups_parent_id INTEGER NOT NULL,
+//     user_id INTEGER NOT NULL,
+//     comment TEXT NOT NULL,
+//     created_at DATETIME NOT NULL,
+//     updated_at DATETIME NOT NULL,
+//     FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+// );
+
+// CREATE TABLE comment_replies (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     comment_id INTEGER NOT NULL,
+//     user_id INTEGER NOT NULL,
+//     reply TEXT NOT NULL,
+//     created_at DATETIME NOT NULL,
+//     updated_at DATETIME NOT NULL,
+//     FOREIGN KEY (comment_id) REFERENCES comments(id)
 // );
 
 // -- user_permissionにデータを2レコード挿入する
@@ -414,6 +434,86 @@ app.post('/get_tags_for_autocomplete', (req, res) => {
     user_with_permission.readable === 1 ? null : (()=>{throw new Error('読み込み権限がありません')})();
     const tags = db.prepare(`SELECT * FROM tags WHERE tag LIKE '%${req.body.tag}%' LIMIT 100`).all();
     res.json({message: 'success', tags});
+    } catch (error) {
+        console.log(error);
+        error_response(res, 'ERROR: ' + error);
+    }
+});
+
+// コメントを追加するAPI。コメントはdups_parentに紐づく。1つのコメントの最大文字数は1文字以上10文字以内。アカウント一つにつきコメントは1つまで。
+app.post('/add_comment', (req, res) => {
+    try {
+        const user_with_permission = get_user_with_permission(req);
+        user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
+        const dups_parent_id = req.body.dups_parent_id;
+        const comment = req.body.comment;
+        const user_id = req.body.user_id;
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(user_id);
+        const dups_parent = db.prepare('SELECT * FROM dups_parent WHERE id = ?').get(dups_parent_id);
+        dups_parent.user_id !== user_id ? null : (() => { throw new Error('権限がありません'); })();
+        comment.length > 0 && comment.length <= 10 ? null : (() => { throw new Error('コメントは1文字以上10文字以内です'); })();
+        db.prepare('SELECT * FROM comments WHERE dups_parent_id = ?').get(dups_parent_id) ? null : (() => { throw new Error('コメントは1つまでです'); })();
+        db.prepare('INSERT INTO comments (dups_parent_id, comment, user_id) VALUES (?, ?, ?)').run(dups_parent_id, comment, user_id);
+        res.json({message: 'success'});
+    } catch (error) {
+        console.log(error);
+        error_response(res, 'ERROR: ' + error);
+    }
+});
+
+// コメントを削除するAPI。コメントはdups_parentに紐づく。コメントを削除する権限はコメントしたユーザーのみ
+// コメントを削除すると、そのコメントに紐づくcomment_repliesも全て削除される。
+app.post('/delete_comment', (req, res) => {
+    try {
+        const user_with_permission = get_user_with_permission(req);
+        user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
+        const comment_id = req.body.comment_id;
+        const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_id);
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(comment.user_id);
+        const dups_parent = db.prepare('SELECT * FROM dups_parent WHERE id = ?').get(comment.dups_parent_id);
+        dups_parent.user_id !== user.id ? null : (() => { throw new Error('権限がありません'); })();
+        db.prepare('DELETE FROM comment_replies WHERE comment_id = ?').run(comment_id);
+        db.prepare('DELETE FROM comments WHERE id = ?').run(comment_id);
+        res.json({message: 'success'});
+    } catch (error) {
+        console.log(error);
+        error_response(res, 'ERROR: ' + error);
+    }
+});
+
+// comment_repliesに返信を追加するAPI。返信はcommentに紐づく。1つの返信の最大文字数は1文字以上10文字以内。アカウント一つにつき返信は1つまで。
+app.post('/add_comment_reply', (req, res) => {
+    try {
+        const user_with_permission = get_user_with_permission(req);
+        user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
+        const comment_id = req.body.comment_id;
+        const comment_reply = req.body.comment_reply;
+        const user_id = req.body.user_id;
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(user_id);
+        const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_id);
+        comment.user_id !== user_id ? null : (() => { throw new Error('権限がありません'); })();
+        comment_reply.length > 0 && comment_reply.length <= 10 ? null : (() => { throw new Error('返信は1文字以上10文字以内です'); })();
+        db.prepare('SELECT * FROM comment_replies WHERE comment_id = ?').get(comment_id) ? null : (() => { throw new Error('返信は1つまでです'); })();
+        db.prepare('INSERT INTO comment_replies (comment_id, comment_reply, user_id) VALUES (?, ?, ?)').run(comment_id, comment_reply, user_id);
+        res.json({message: 'success'});
+    } catch (error) {
+        console.log(error);
+        error_response(res, 'ERROR: ' + error);
+    }
+});
+
+// comment_repliesを削除するAPI。返信はcommentに紐づく。返信を削除する権限は返信したユーザーのみ
+app.post('/delete_comment_reply', (req, res) => {
+    try {
+        const user_with_permission = get_user_with_permission(req);
+        user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
+        const comment_reply_id = req.body.comment_reply_id;
+        const comment_reply = db.prepare('SELECT * FROM comment_replies WHERE id = ?').get(comment_reply_id);
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(comment_reply.user_id);
+        const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_reply.comment_id);
+        comment.user_id !== user.id ? null : (() => { throw new Error('権限がありません'); })();
+        db.prepare('DELETE FROM comment_replies WHERE id = ?').run(comment_reply_id);
+        res.json({message: 'success'});
     } catch (error) {
         console.log(error);
         error_response(res, 'ERROR: ' + error);

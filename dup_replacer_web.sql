@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS dups;
 DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS dups_parent_tags;
 DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS comment_replies;
 
 -- ユーザーの権限のテーブル。カラムはIDはと名前と作成日と更新日を持つ。IDは自動的に増加する
 -- カラムの中には、一般ユーザー、ゲストユーザーがある
@@ -18,6 +20,7 @@ CREATE TABLE user_permission (
   writable INTEGER NOT NULL,
   deletable INTEGER NOT NULL, 
   likable INTEGER NOT NULL,
+  commentable INTEGER NOT NULL,
 
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL
@@ -80,6 +83,25 @@ CREATE TABLE tags (
   tag TEXT NOT NULL
 );
 
+CREATE TABLE comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dups_parent_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  comment TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
+);
+
+CREATE TABLE comment_replies (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  comment_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  reply TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  FOREIGN KEY (comment_id) REFERENCES comments(id)
+);
 
 
 
@@ -89,13 +111,15 @@ readable,
 writable,
 deletable,
 likable,
-created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, 0, DATETIME('now'), DATETIME('now'));
+commentable,
+created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, 0, 0, DATETIME('now'), DATETIME('now'));
 INSERT INTO user_permission (id, permission,
 readable,
 writable,
 deletable,
 likable,
-created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, DATETIME('now'), DATETIME('now'));
+commentable,
+created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, 1, DATETIME('now'), DATETIME('now'));
 
 
 -- usersにデータを3レコード挿入する
@@ -107,108 +131,3 @@ INSERT INTO users (user_permission_id, username, userpassword, created_at, updat
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 2, DATETIME('now'), DATETIME('now'));
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 3, DATETIME('now'), DATETIME('now'));
-
-SELECT
-dups_parent.id AS dups_parent_id
-,dups.content_1 AS dups_content_1
--- tagがない場合は空文字を返し、ある場合はカンマ区切りで返す
--- ,IFNULL(GROUP_CONCAT(tags.tag, ', '), NULL) as res
-,(SELECT
-    IFNULL(GROUP_CONCAT(tags.tag, ', '), 'NO_TAG') as RESULT
-    FROM dups_parent
-    LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-    LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-    WHERE dups_parent.id = 8)
-      AS FOO
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
--- LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
--- LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-WHERE users.username = 'name1';
-
-
-
-SELECT
-dups_parent.id AS dups_parent_id
-,dups.content_1 AS dups_content_1
--- tagがない場合は空文字を返し、ある場合はカンマ区切りで返す
--- ,IFNULL(GROUP_CONCAT(tags.tag, ', '), "ZZZZZZZ") as tags
--- ,GROUP_CONCAT(tags.tag, ', ') as tags
-,tags.tag AS tags_tag
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-WHERE users.username = 'name1';
-
-
-SELECT
-IFNULL(GROUP_CONCAT(tags.tag, ', '), "ZZZZZZZ") as tags
-FROM dups_parent
-LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-WHERE dups_parent.id = 9;
-
-
-SELECT
-dups_parent_tags.id AS dups_parent_tags_id
-,dups_parent_tags.dups_parent_id AS dups_parent_tags_dups_parent_id
-,dups_parent_tags.tag_id AS dups_parent_tags_tag_id
-,tags.id AS tags_id
-,tags.tag AS tags_tag
-FROM dups_parent
-LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-WHERE dups_parent.id = 9;
-
-SELECT
-    dups_parent.id AS dups_parent_id,
-    dups_parent.created_at AS dups_parent_created_at,
-    dups_parent.updated_at AS dups_parent_updated_at,
-    users.username AS user_name,
-    dups.content_group_id AS dups_content_group_id,
-    dups.content_1 AS dups_content_1,
-    dups.content_2 AS dups_content_2,
-    dups.content_3 AS dups_content_3,
-    (SELECT COUNT(*)
-        FROM likes
-            WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
-    FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-    LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-    ORDER BY likes_count DESC
-    LIMIT 10;
-
-
-
-
-
-
-
-
-
-
-
-
-SELECT
-dups_parent.id AS FOO
-,dups.content_1 AS dups_content_1
-,(SELECT
-dups_parent.id AS THE_ID
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-WHERE users.username = 'name1')
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-WHERE users.username = 'name1';
-
-
-
-
-
-
-
-(SELECT
-dups_parent.id AS THE_ID
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-WHERE users.username = 'name1')
