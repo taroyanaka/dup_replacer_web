@@ -322,20 +322,48 @@ app.post('/add_tag', (req, res) => {
     }
 });
 
-// 該当tagを全部削除するAPI
-app.post('/delete_tag', (req, res) => {
+
+
+app.post('/get_dups_parents', (req, res) => {
+    try {
+    const user_with_permission = get_user_with_permission(req);
+    user_with_permission.readable === 1 ? null : (()=>{throw new Error('読み込み権限がありません')})();
+    const dups_parents = db.prepare(`SELECT * FROM dups_parents WHERE dups_parent LIKE '%${req.body.dups_parent}%' LIMIT 10`).all();
+    res.json({message: 'success', dups_parents});
+    } catch (error) {
+        console.log(error);
+        error_response(res, 'ERROR: ' + error);
+    }
+});
+
+// このAPIはdups_parentを削除するAPIではなく、dups_parentと紐づいたタグを削除するAPI
+app.post('/delete_dups_parent', (req, res) => {
     try {
     const user_with_permission = get_user_with_permission(req);
     user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
-    db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.id);
-    // tagsテーブルから削除したタグに紐づいたdups_parent_tagsを削除する
-    db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.id);
+    // dups_parentと紐づいたdups_parent_tagsを削除する
+    db.prepare('DELETE FROM dups_parent_tags WHERE dups_parent_id = ?').run(req.body.dups_parent_id);
     res.json({message: 'success'});
     } catch (error) {
         console.log(error);
-        error_response(res, '原因不明のエラー' + error);
+        error_response(res, 'ERROR: ' + error);
     }
 });
+
+// 該当tagを全部削除するAPI。多分使う機会が無いのでコメントアウトしておく
+// app.post('/delete_tag', (req, res) => {
+//     try {
+//     const user_with_permission = get_user_with_permission(req);
+//     user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+//     db.prepare('DELETE FROM tags WHERE id = ?').run(req.body.id);
+//     // tagsテーブルから削除したタグに紐づいたdups_parent_tagsを削除する
+//     db.prepare('DELETE FROM dups_parent_tags WHERE tag_id = ?').run(req.body.id);
+//     res.json({message: 'success'});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, '原因不明のエラー' + error);
+//     }
+// });
 
 // dups_parent_tagsを削除し、tagが他で利用されていなければtagsテーブルからも削除するAPI
 app.post('/delete_dups_parent_tags', (req, res) => {
@@ -375,5 +403,19 @@ app.post('/delete_tag', (req, res) => {
     } catch (error) {
         console.log(error);
         error_response(res, '原因不明のエラー' + error);
+    }
+});
+
+
+app.post('/get_tags_for_autocomplete', (req, res) => {
+    try {
+        console.log(req.body.tag);
+    const user_with_permission = get_user_with_permission(req);
+    user_with_permission.readable === 1 ? null : (()=>{throw new Error('読み込み権限がありません')})();
+    const tags = db.prepare(`SELECT * FROM tags WHERE tag LIKE '%${req.body.tag}%' LIMIT 100`).all();
+    res.json({message: 'success', tags});
+    } catch (error) {
+        console.log(error);
+        error_response(res, 'ERROR: ' + error);
     }
 });

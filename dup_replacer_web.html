@@ -105,6 +105,13 @@ grid-template-areas:
     <button @click="fetch_insert_dup">fetch_insert_dup</button>
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
     <input type="text" v-model="tag" class="tag" placeholder="tag">
+
+    <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag">
+    <ul>
+        <li v-for="(item, index) in auto_complete_tags" @click="tag = item">AAA {{ item }}</li>
+    </ul>
+    
+
     <ul>
         <li v-for="(TAG, TAG_INDEX) in all_tags">{{ TAG }}</li>
     </ul>
@@ -165,6 +172,9 @@ return {
     response_message: '',
     tag: 'tag1',
     all_tags: [],
+    // auto_complete_tag
+    auto_complete_tags: [],
+    auto_complete_tags_cunrrent_tag: '',
 }
 },
 watch: {
@@ -600,6 +610,46 @@ switch_user(){
         default: break;
     }
 },
+
+
+// タグのオートコンプリートのためのAPI
+// app.post('/get_tags_for_autocomplete', (req, res) => {
+//     try {
+//     const user_with_permission = get_user_with_permission(req);
+//     user_with_permission.readable === 1 ? null : (()=>{throw new Error('読み込み権限がありません')})();
+//     const tags = db.prepare(`SELECT * FROM tags WHERE tag LIKE '%${req.body.tag}%' LIMIT 100`).all();
+//     res.json({message: 'success', tags});
+//     } catch (error) {
+//         console.log(error);
+//         error_response(res, 'ERROR: ' + error);
+//     }
+// });
+
+// search_tagはauto_complete_tagsとauto_complete_tags_cunrrent_tagを更新する
+async search_tag(){
+    // console.log('search_tag')
+    this.auto_complete_tags = [];
+    const res = await fetch('http://localhost:8000/get_tags_for_autocomplete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            tag: this.auto_complete_tags_cunrrent_tag,
+        }),
+    });
+    const data = await res.json();
+    console.log(data);
+    const get_tags_ary = (tags) => tags.map(tag => tag.tag);
+    this.auto_complete_tags = get_tags_ary(data.tags);
+    // this.auto_complete_tags = data.tags;
+    // this.auto_complete_tags_current_tag = this.tag;
+},
+
+
+
 
 }}).mount('.app');
 </script>
