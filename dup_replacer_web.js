@@ -487,14 +487,14 @@ app.post('/add_comment_reply', (req, res) => {
         const user_with_permission = get_user_with_permission(req);
         user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
         const comment_id = req.body.comment_id;
-        const comment_reply = req.body.comment_reply;
+        const reply = req.body.reply;
         const user_id = req.body.user_id;
         const user = db.prepare('SELECT * FROM users WHERE id = ?').get(user_id);
         const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_id);
         comment.user_id !== user_id ? null : (() => { throw new Error('権限がありません'); })();
-        comment_reply.length > 0 && comment_reply.length <= 10 ? null : (() => { throw new Error('返信は1文字以上10文字以内です'); })();
+        reply.length > 0 && reply.length <= 10 ? null : (() => { throw new Error('返信は1文字以上10文字以内です'); })();
         db.prepare('SELECT * FROM comment_replies WHERE comment_id = ?').get(comment_id) ? null : (() => { throw new Error('返信は1つまでです'); })();
-        db.prepare('INSERT INTO comment_replies (comment_id, comment_reply, user_id) VALUES (?, ?, ?)').run(comment_id, comment_reply, user_id);
+        db.prepare('INSERT INTO comment_replies (comment_id, reply, user_id) VALUES (?, ?, ?)').run(comment_id, reply, user_id);
         res.json({message: 'success'});
     } catch (error) {
         console.log(error);
