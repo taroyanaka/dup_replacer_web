@@ -129,21 +129,26 @@ grid-template-areas:
     <button @click="fetch_like_dups_parent(item[0]['dups_parent_id'])">fetch_like_dups_parent</button>
     <button @click="fetch_delete_like_dups_parent(item[0]['dups_parent_id'])">fetch_delete_like_dups_parent</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
-        <!-- <span>{{ITEM_1}}</span> -->
-    <div>
-        <div class="accent_color">{{ INDEX_1 }}</div>
-        <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
-        <div><span>dups_parent_created_at: </span><span>{{ ITEM_1.dups_parent_created_at }}</span></div>
-        <div><span>user_name: </span><span>{{ ITEM_1.user_name }}</span></div>
-        <div><span>dups_content_group_id: </span><span>{{ ITEM_1.dups_content_group_id }}</span></div>
-        <div><span>dups_content_1: </span><span>{{ ITEM_1.dups_content_1 }}</span></div>
-        <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
-        <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
-        <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
-        <div><span>tags: </span><span>{{ ITEM_1.tags ? ITEM_1.tags[0].tags : null }}</span></div>
-        <div><span>comments_comment: </span><span>{{ ITEM_1.comments_comment ? ITEM_1.comments_comment : null }}</span></div>
-        <div><span>comment_replies_reply: </span><span>{{ ITEM_1.comment_replies_reply ? ITEM_1.comment_replies_reply : null }}</span></div>
-    </div>
+            <!-- <span>{{ITEM_1}}</span> -->
+        <div>
+            <div class="accent_color">{{ INDEX_1 }}</div>
+            <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
+            <div><span>dups_parent_created_at: </span><span>{{ ITEM_1.dups_parent_created_at }}</span></div>
+            <div><span>user_name: </span><span>{{ ITEM_1.user_name }}</span></div>
+            <div><span>dups_content_group_id: </span><span>{{ ITEM_1.dups_content_group_id }}</span></div>
+            <div><span>dups_content_1: </span><span>{{ ITEM_1.dups_content_1 }}</span></div>
+            <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
+            <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
+            <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
+            <div><span>tags: </span><span>{{ ITEM_1.tags ? ITEM_1.tags[0].tags : null }}</span></div>
+            <!-- <div><span>comment_replies_reply: </span><span>{{ ITEM_1.comment_replies_reply ? ITEM_1.comment_replies_reply : null }}</span></div> -->
+        </div>
+        <div>
+            <ul>
+                <li v-for="(COMMENT, COMMENT_IDX) in ITEM_1.comments_and_replies">COMMENT: {{ COMMENT.comment }}</li>
+                <!-- <li>COMMENT: {{ ITEM_1.comments_comment }}</li> -->
+            </ul>
+        </div>
     </template>
     </li>
     </ul>

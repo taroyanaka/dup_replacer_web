@@ -172,22 +172,10 @@ dups.content_3 AS dups_content_3,
 
 (SELECT COUNT(*)
     FROM likes
-        WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
-
-comments.id AS comments_id,
-comments.comment AS comments_comment,
-comments.created_at AS comments_created_at,
-comments.updated_at AS comments_updated_at,
-
-comment_replies.id AS comment_replies_id,
-comment_replies.reply AS comment_replies_reply,
-comment_replies.created_at AS comment_replies_created_at,
-comment_replies.updated_at AS comment_replies_updated_at
+        WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
 
 FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
 LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
-LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
 `;
     switch (true) {
     case req.body.ORDER_BY === undefined || req.body.ASC_OR_DESC === undefined:
@@ -209,6 +197,29 @@ LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
         WHERE dups_parent.id = ?
     `).all(dups_parent_id);
 
+    const get_comments_and_replies = (dups_parent_id) => db.prepare(
+        `SELECT
+        comments.id AS comment_id,
+        comments.comment AS comment,
+        comments.created_at AS comment_created_at,
+        comments.updated_at AS comment_updated_at,
+        comment_replies.id AS comment_reply_id,
+        comment_replies.reply AS comment_reply,
+        comment_replies.created_at AS comment_reply_created_at,
+        comment_replies.updated_at AS comment_reply_updated_at,
+        users.username AS comment_user_name,
+        users.id AS comment_user_id
+
+        FROM dups_parent
+        LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
+        LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
+        LEFT JOIN users ON comments.user_id = users.id
+
+        WHERE dups_parent.id = ?
+    `).all(dups_parent_id);
+
+
+
     function groupBy(array, key) {
         return array.reduce((result, currentValue) => {
             (result[currentValue[key]] = result[currentValue[key]] || []).push(
@@ -221,7 +232,8 @@ LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
     const new_rows = rows.map(item => {
         return {
             ...item, // 元のオブジェクトを展開
-            tags: get_tags(item.dups_parent_id) // dups_parent_idを追加
+            tags: get_tags(item.dups_parent_id),
+            comments_and_replies: get_comments_and_replies(item.dups_parent_id)
         }
     });
 
@@ -469,8 +481,8 @@ app.post('/add_comment', (req, res) => {
 
     const user_with_permission = get_user_with_permission(req);
     user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
-    // アカウント一つにつきコメントは1つまで。
-    db.prepare('SELECT * FROM comments WHERE user_id = ?').get(user_with_permission.user_id) ? (() => { throw new Error('アカウント一つにつきコメントは1つまでです'); })() : null;
+    // アカウント一つにつき1つのdups_parentに対して1つのコメントしかできない
+    db.prepare('SELECT * FROM comments WHERE dups_parent_id = ? AND user_id = ?').get(req.body.dups_parent_id, user_with_permission.user_id) ? (()=>{throw new Error('アカウント一つにつき1つのdups_parentに対して1つのコメントしかできません')})() : null;
     db.prepare('INSERT INTO comments (dups_parent_id, comment, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').run(req.body.dups_parent_id, req.body.comment, user_with_permission.user_id, now(), now());
     res.json({message: 'success'});
     } catch (error) {
