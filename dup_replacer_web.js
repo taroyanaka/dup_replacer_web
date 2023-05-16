@@ -197,26 +197,49 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
         WHERE dups_parent.id = ?
     `).all(dups_parent_id);
 
-    const get_comments_and_replies = (dups_parent_id) => db.prepare(
+    // const get_comments_and_replies = (dups_parent_id) => db.prepare(
+    //     `SELECT
+    //     comments.id AS comment_id,
+    //     comments.comment AS comment,
+    //     comments.created_at AS comment_created_at,
+    //     comments.updated_at AS comment_updated_at,
+    //     comment_replies.id AS comment_reply_id,
+    //     comment_replies.reply AS comment_reply,
+    //     comment_replies.created_at AS comment_reply_created_at,
+    //     comment_replies.updated_at AS comment_reply_updated_at,
+    //     users.username AS comment_user_name,
+    //     users.id AS comment_user_id
+
+    //     FROM dups_parent
+    //     LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
+    //     LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
+    //     LEFT JOIN users ON comments.user_id = users.id
+
+    //     WHERE dups_parent.id = ?
+    // `).all(dups_parent_id);
+
+    const get_comments_and_replies_group_by_comment_id = (dups_parent_id) => db.prepare(
         `SELECT
         comments.id AS comment_id,
         comments.comment AS comment,
         comments.created_at AS comment_created_at,
         comments.updated_at AS comment_updated_at,
-        comment_replies.id AS comment_reply_id,
-        comment_replies.reply AS comment_reply,
-        comment_replies.created_at AS comment_reply_created_at,
-        comment_replies.updated_at AS comment_reply_updated_at,
-        users.username AS comment_user_name,
-        users.id AS comment_user_id
-
+        GROUP_CONCAT(comment_replies.id) AS comment_reply_id,
+        GROUP_CONCAT(comment_replies.reply) AS comment_reply,
+        GROUP_CONCAT(comment_replies.created_at) AS comment_reply_created_at,
+        GROUP_CONCAT(comment_replies.updated_at) AS comment_reply_updated_at,
+        GROUP_CONCAT(users.username) AS comment_user_name,
+        GROUP_CONCAT(users.id) AS comment_user_id
+        
         FROM dups_parent
         LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
         LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
         LEFT JOIN users ON comments.user_id = users.id
 
         WHERE dups_parent.id = ?
+        GROUP BY comments.id
     `).all(dups_parent_id);
+
 
 
 
@@ -233,7 +256,8 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
         return {
             ...item, // 元のオブジェクトを展開
             tags: get_tags(item.dups_parent_id),
-            comments_and_replies: get_comments_and_replies(item.dups_parent_id)
+            // comments_and_replies: get_comments_and_replies(item.dups_parent_id),
+            comments_and_replies: get_comments_and_replies_group_by_comment_id(item.dups_parent_id)
         }
     });
 
@@ -514,6 +538,8 @@ app.post('/delete_comment', (req, res) => {
 // comment_repliesに返信を追加するAPI。返信はcommentに紐づく。1つの返信の最大文字数は1文字以上10文字以内。アカウント一つにつき一つのコメントに対する返信は1つまで。
 app.post('/add_comment_reply', (req, res) => {
     try {
+    // req.body.replyには,を含めることができない(sqlのgroup_concatのため)
+    req.body.reply.includes(',') ? (() => { throw new Error('返信に,(カンマ)を含めることはできません'); })() : null;
     req.body.reply !== undefined ? null : (() => { throw new Error('返信が空です'); })();
     req.body.reply.length >= 1 && req.body.reply.length <= 10 ? null : (() => { throw new Error('返信は1文字以上10文字以内です'); })();
     const user_with_permission = get_user_with_permission(req);

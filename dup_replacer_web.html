@@ -150,6 +150,9 @@ grid-template-areas:
                     <span>{{ COMMENT.comment }}: </span>
                     <span>{{ COMMENT.comment_user_name }}: </span>
                     <span>{{ COMMENT.comment_created_at }}: </span>
+                    <ul>
+                        <li v-for="(COMMENT_REPLY, COMMENT_REPLY_IDX) in COMMENT.comment_reply.split(',')">COMMENT_REPLY: {{ COMMENT_REPLY }}</li>
+                    </ul>
                     <input type="text" name="reply" class="reply" v-model="reply">
                     <button @click="fetch_add_comment_reply(COMMENT.comment_id)">fetch_add_comment_reply</button>
                 </li>
