@@ -514,18 +514,12 @@ app.post('/delete_comment', (req, res) => {
 // comment_repliesに返信を追加するAPI。返信はcommentに紐づく。1つの返信の最大文字数は1文字以上10文字以内。アカウント一つにつき一つのコメントに対する返信は1つまで。
 app.post('/add_comment_reply', (req, res) => {
     try {
+    req.body.reply !== undefined ? null : (() => { throw new Error('返信が空です'); })();
+    req.body.reply.length >= 1 && req.body.reply.length <= 10 ? null : (() => { throw new Error('返信は1文字以上10文字以内です'); })();
     const user_with_permission = get_user_with_permission(req);
     user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
-    const comment_id = req.body.comment_id;
-    const reply = req.body.reply;
-    const user_id = req.body.user_id;
-    // const user = db.prepare('SELECT * FROM users WHERE id = ?').get(user_id);
-    const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_id);
-    comment.user_id !== user_id ? null : (() => { throw new Error('権限がありません'); })();
-    reply.length > 0 && reply.length <= 10 ? null : (() => { throw new Error('返信は1文字以上10文字以内です'); })();
-    // アカウント一つにつき一つのコメントに対する返信は1つまで。
-    db.prepare('SELECT * FROM comment_replies WHERE comment_id = ? AND user_id = ?').get(comment_id, user_id) ? null : (() => { throw new Error('返信は1つまでです'); })();
-    db.prepare('INSERT INTO comment_replies (comment_id, reply, user_id) VALUES (?, ?, ?)').run(comment_id, reply, user_id);
+    db.prepare('SELECT * FROM comment_replies WHERE comment_id = ? AND user_id = ?').get(req.body.comment_id, user_with_permission.user_id ) ? (() => { throw new Error('アカウント1つにつき1つのコメントに対する返信は1つまで'); })() : null;
+    db.prepare('INSERT INTO comment_replies (comment_id, reply, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').run(req.body.comment_id, req.body.reply, user_with_permission.user_id, now(), now());
     res.json({message: 'success'});
     } catch (error) {
     console.log(error);

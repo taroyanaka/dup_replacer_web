@@ -144,8 +144,15 @@ grid-template-areas:
             <!-- <div><span>comment_replies_reply: </span><span>{{ ITEM_1.comment_replies_reply ? ITEM_1.comment_replies_reply : null }}</span></div> -->
         </div>
         <div>
+            <div>COMMENT</div>
             <ul>
-                <li v-for="(COMMENT, COMMENT_IDX) in ITEM_1.comments_and_replies">COMMENT: {{ COMMENT.comment }}</li>
+                <li v-for="(COMMENT, COMMENT_IDX) in ITEM_1.comments_and_replies">
+                    <span>{{ COMMENT.comment }}: </span>
+                    <span>{{ COMMENT.comment_user_name }}: </span>
+                    <span>{{ COMMENT.comment_created_at }}: </span>
+                    <input type="text" name="reply" class="reply" v-model="reply">
+                    <button @click="fetch_add_comment_reply(COMMENT.comment_id)">fetch_add_comment_reply</button>
+                </li>
                 <!-- <li>COMMENT: {{ ITEM_1.comments_comment }}</li> -->
             </ul>
         </div>
@@ -742,6 +749,24 @@ async fetch_add_comment(DUPS_PARENT_ID){
 //     error_response(res, 'ERROR: ' + error);
 //     }
 // });
+async fetch_add_comment_reply(COMMENT_ID){
+    const res = await fetch('http://localhost:8000/add_comment_reply', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            comment_id: COMMENT_ID,
+            reply: this.reply,
+        }),
+    });
+    const data = await res.json();
+    console.log(data);
+    this.reply = '';
+    await this.fetch_read_comment(COMMENT_ID);
+},
 
 // comment_repliesを削除するAPI。返信はcommentに紐づく。返信を削除する権限は返信したユーザーのみ
 // app.post('/delete_comment_reply', (req, res) => {
