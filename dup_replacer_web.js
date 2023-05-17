@@ -256,7 +256,6 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
         return {
             ...item, // 元のオブジェクトを展開
             tags: get_tags(item.dups_parent_id),
-            // comments_and_replies: get_comments_and_replies(item.dups_parent_id),
             comments_and_replies: get_comments_and_replies_group_by_comment_id(item.dups_parent_id)
         }
     });
@@ -515,19 +514,14 @@ app.post('/add_comment', (req, res) => {
     }
 });
 
-// コメントを削除するAPI。コメントはdups_parentに紐づく。コメントを削除する権限はコメントしたユーザーのみ
-// コメントを削除すると、そのコメントに紐づくcomment_repliesも全て削除される。
-app.post('/delete_comment', (req, res) => {
+
+app.post('/delete_comment', (req, res) => { // コメントを削除するAPI。コメントはdups_parentに紐づく。コメントを削除する権限はコメントしたユーザーのみ。コメントを削除すると、そのコメントに紐づくcomment_repliesも全て削除される。
     try {
     const user_with_permission = get_user_with_permission(req);
     user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
-    const comment_id = req.body.comment_id;
-    const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_id);
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(comment.user_id);
-    const dups_parent = db.prepare('SELECT * FROM dups_parent WHERE id = ?').get(comment.dups_parent_id);
-    dups_parent.user_id !== user.id ? null : (() => { throw new Error('権限がありません'); })();
-    db.prepare('DELETE FROM comment_replies WHERE comment_id = ?').run(comment_id);
-    db.prepare('DELETE FROM comments WHERE id = ?').run(comment_id);
+    db.prepare('SELECT * FROM comments WHERE id = ? AND user_id = ?').get(req.body.comment_id, user_with_permission.user_id) ? null : (()=>{throw new Error('コメントを削除する権限がありません')})();　// 該当のコメントが、そのコメントを投稿したユーザーか確認する
+    db.prepare('DELETE FROM comment_replies WHERE comment_id = ?').run(req.body.comment_id);
+    db.prepare('DELETE FROM comments WHERE id = ?').run(req.body.comment_id);
     res.json({message: 'success'});
     } catch (error) {
     console.log(error);
