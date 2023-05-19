@@ -152,7 +152,13 @@ grid-template-areas:
                     <span>{{ COMMENT.comment_user_name }}: </span>
                     <span>{{ COMMENT.comment_created_at }}: </span>
                     <ul v-if="COMMENT.comment_reply">
-                        <li v-for="(COMMENT_REPLY, COMMENT_REPLY_IDX) in COMMENT.comment_reply.split(',')">COMMENT_REPLY: {{ COMMENT_REPLY }}</li>
+                        <li v-for="(COMMENT_REPLY_ID, COMMENT_REPLY_IDX) in COMMENT.comment_reply_id.split(',')">COMMENT_REPLY_ID: {{ COMMENT_REPLY_ID }}</li>
+                        <li v-for="(COMMENT_REPLY, COMMENT_REPLY_IDX) in COMMENT.comment_reply.split(',')">COMMENT_REPLY {{ COMMENT_REPLY }}</li>
+                        <!-- <li v-for="(COMMENT_REPLY_CREATED_AT , COMMENT_REPLY_IDX) in COMMENT.comment_reply_created_at.split(',')">COMMENT_REPLY_CREATED_AT: {{ COMMENT_REPLY_CREATED_AT }}</li> -->
+                        <!-- <li v-for="(COMMENT_REPLY_UPDATED_AT , COMMENT_REPLY_IDX) in COMMENT.comment_reply_updated_at.split(',')">COMMENT_REPLY_UPDATED_AT: {{ COMMENT_REPLY_UPDATED_AT }}</li> -->
+                        <!-- <li v-for="(COMMENT_REPLY_USER_ID, COMMENT_REPLY_IDX) in COMMENT.comment_user_id.split(',')">COMMENT_REPLY_USER_ID: {{ COMMENT_REPLY_USER_ID }}</li> -->
+                        <li v-for="(COMMENT_REPLY_USER_NAME , COMMENT_REPLY_IDX) in COMMENT.comment_user_name.split(',')">COMMENT_REPLY_USER_NAME: {{ COMMENT_REPLY_USER_NAME }}</li>
+                        <li v-for="(ZIP_REPLY , ZIP_REPLY_IDX) in get_zip_reply(COMMENT)">ZIP_REPLY: {{ ZIP_REPLY }}</li>
                     </ul>
                     <input type="text" name="reply" class="reply" v-model="reply">
                     <button @click="fetch_add_comment_reply(COMMENT.comment_id)">fetch_add_comment_reply</button>
@@ -223,6 +229,25 @@ beforeUpdated() {
 updated() {
 },
 methods: {
+// const d = [4, 5, 6];
+// const e = ['d', 'e', 'f'];
+// const f = [7, 8, 9];
+// multi_zip([d, e, f, g]); // [[4, 'd', 7], [5, 'e', 8], [6, 'f', 9]]
+multi_zip(arrays){
+    const length = arrays.reduce((a, b) => Math.min(a, b.length), Infinity);
+    const result = [];
+    for (let i = 0; i < length; i++) {
+        result.push(arrays.map((array) => array[i]));
+    }
+    return result;
+},
+get_zip_reply(COMMENT){
+    return this.multi_zip([
+        COMMENT.comment_reply_id.split(','),
+        COMMENT.comment_reply.split(','),
+        COMMENT.comment_user_name.split(','),
+    ])
+},
 refresh_save_data() {
     this.save_data = [
         this.B_C_list,
@@ -800,6 +825,8 @@ async fetch_add_comment_reply(COMMENT_ID){
 //     error_response(res, 'ERROR: ' + error);
 //     }
 // });
+
+
 
 
 
