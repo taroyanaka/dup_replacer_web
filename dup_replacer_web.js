@@ -519,7 +519,7 @@ app.post('/delete_comment', (req, res) => { // コメントを削除するAPI。
     try {
     const user_with_permission = get_user_with_permission(req);
     user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
-    db.prepare('SELECT * FROM comments WHERE id = ? AND user_id = ?').get(req.body.comment_id, user_with_permission.user_id) ? null : (()=>{throw new Error('コメントを削除する権限がありません')})();　// 該当のコメントが、そのコメントを投稿したユーザーか確認する
+    db.prepare('SELECT * FROM comments WHERE id = ? AND user_id = ?').get(req.body.comment_id, user_with_permission.user_id) ? null : (()=>{throw new Error('コメントを削除する権限がありません')})(); // 該当のコメントが、そのコメントを投稿したユーザーか確認する
     db.prepare('DELETE FROM comment_replies WHERE comment_id = ?').run(req.body.comment_id);
     db.prepare('DELETE FROM comments WHERE id = ?').run(req.body.comment_id);
     res.json({message: 'success'});
@@ -552,12 +552,10 @@ app.post('/delete_comment_reply', (req, res) => {
     try {
     const user_with_permission = get_user_with_permission(req);
     user_with_permission.commentable === 1 ? null : (()=>{throw new Error('コメント権限がありません')})();
-    const comment_reply_id = req.body.comment_reply_id;
-    const comment_reply = db.prepare('SELECT * FROM comment_replies WHERE id = ?').get(comment_reply_id);
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(comment_reply.user_id);
-    const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(comment_reply.comment_id);
-    comment.user_id !== user.id ? null : (() => { throw new Error('権限がありません'); })();
-    db.prepare('DELETE FROM comment_replies WHERE id = ?').run(comment_reply_id);
+    // const res = db.prepare('SELECT * FROM comment_replies WHERE id = ? AND user_id = ?').get(req.body.comment_reply_id, user_with_permission.user_id)
+    db.prepare('SELECT * FROM comment_replies WHERE id = ? AND user_id = ?').get(req.body.comment_reply_id, user_with_permission.user_id) ? null : (()=>{throw new Error('返信を削除する権限がありません')})(); // 該当のコメントが、そのコメントを投稿したユーザーか確認する
+    // console.log(res);
+    db.prepare('DELETE FROM comment_replies WHERE id = ? and user_id = ?').run(req.body.comment_reply_id, user_with_permission.user_id);
     res.json({message: 'success'});
     } catch (error) {
     console.log(error);
