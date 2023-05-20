@@ -322,6 +322,8 @@ app.post('/delete_all_dups_and_dups_parent', (req, res) => {
     const user_with_permission = get_user_with_permission(req);
     user_with_permission ? null : (()=>{throw new Error('ユーザーが存在しません')})();
     user_with_permission.deletable === 1 ? null : (()=>{throw new Error('削除権限がありません')})();
+    db.prepare('DELETE FROM replies').run() ? null : (()=>{throw new Error('repliesを削除できませんでした')})();
+    db.prepare('DELETE FROM comments').run() ? null : (()=>{throw new Error('commentsを削除できませんでした')})();
     db.prepare('DELETE FROM dups').run() ? null : (()=>{throw new Error('dupsを削除できませんでした')})();
     db.prepare('DELETE FROM dups_parent_tags').run() ? null : (()=>{throw new Error('dups_parent_tagsを削除できませんでした')})();
     db.prepara('DELETE FROM likes').run() ? null : (()=>{throw new Error('likesを削除できませんでした')})();
