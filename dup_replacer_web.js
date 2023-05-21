@@ -177,12 +177,16 @@ dups.content_3 AS dups_content_3,
 FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
 LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
 `;
+// console.log('likes_count ASC');
     switch (true) {
-    case req.body.ORDER_BY === undefined || req.body.ASC_OR_DESC === undefined:
+    case req.query.ORDER_BY === undefined || req.query.ASC_OR_DESC === undefined:
+        console.log('no ORDER_BY or ASC_OR_DESC');
         rows = db.prepare(standard_read_queries).all(); break;
-    case req.body.ORDER_BY === "likes_count" && req.body.ASC_OR_DESC === 'ASC':
+    case req.query.ORDER_BY === "likes_count" && req.query.ASC_OR_DESC === 'ASC':
+        console.log('likes_count ASC');
         rows = db.prepare(standard_read_queries + 'ORDER BY likes_count ASC').all(); break;
-    case req.body.ORDER_BY === "likes_count" && req.body.ASC_OR_DESC === 'DESC':
+    case req.query.ORDER_BY === "likes_count" && req.query.ASC_OR_DESC === 'DESC':
+        console.log('likes_count DESC');
         rows = db.prepare(standard_read_queries + 'ORDER BY likes_count DESC').all(); break;
     default: break;
     }
@@ -196,27 +200,6 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
         JOIN tags ON dups_parent_tags.tag_id = tags.id
         WHERE dups_parent.id = ?
     `).all(dups_parent_id);
-
-    // const get_comments_and_replies = (dups_parent_id) => db.prepare(
-    //     `SELECT
-    //     comments.id AS comment_id,
-    //     comments.comment AS comment,
-    //     comments.created_at AS comment_created_at,
-    //     comments.updated_at AS comment_updated_at,
-    //     comment_replies.id AS comment_reply_id,
-    //     comment_replies.reply AS comment_reply,
-    //     comment_replies.created_at AS comment_reply_created_at,
-    //     comment_replies.updated_at AS comment_reply_updated_at,
-    //     users.username AS comment_user_name,
-    //     users.id AS comment_user_id
-
-    //     FROM dups_parent
-    //     LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
-    //     LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
-    //     LEFT JOIN users ON comments.user_id = users.id
-
-    //     WHERE dups_parent.id = ?
-    // `).all(dups_parent_id);
 
     const get_comments_and_replies_group_by_comment_id = (dups_parent_id) => db.prepare(
         `SELECT
@@ -260,8 +243,11 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
         }
     });
 
+    // console.log(new_rows);
+
     const group_rows = groupBy(new_rows, 'dups_parent_id');
 
+    console.log(group_rows);
     res.json(group_rows);
     } catch (error) {
         console.log(error);
@@ -269,6 +255,52 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
             '原因不明のエラー' + error);
     }
 });
+
+app.get('/read_dups_parent2', (req, res) => {
+    try {
+const standard_read_queries2 =
+`SELECT
+dups_parent.id AS dups_parent_id,
+dups_parent.created_at AS dups_parent_created_at,
+dups_parent.updated_at AS dups_parent_updated_at,
+users.username AS user_name,
+dups.content_group_id AS dups_content_group_id,
+dups.content_1 AS dups_content_1,
+dups.content_2 AS dups_content_2,
+dups.content_3 AS dups_content_3,
+(SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
+  GROUP_CONCAT(DISTINCT tags.tag) AS tags,
+
+  GROUP_CONCAT(DISTINCT comments.id) AS comment_id,
+    GROUP_CONCAT(DISTINCT comments.comment) AS comment,
+    GROUP_CONCAT(DISTINCT comments.created_at) AS comment_created_at,
+    GROUP_CONCAT(DISTINCT comments.updated_at) AS comment_updated_at,
+    
+
+
+  GROUP_CONCAT(DISTINCT comment_replies.id) AS comment_reply_id,
+  GROUP_CONCAT(DISTINCT comment_replies.reply) AS comment_reply,
+  GROUP_CONCAT(DISTINCT comment_replies.created_at) AS comment_reply_created_at,
+  GROUP_CONCAT(DISTINCT comment_replies.updated_at) AS comment_reply_updated_at,
+  GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
+  GROUP_CONCAT(DISTINCT users.id) AS comment_user_id 
+FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
+LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
+GROUP BY dups_parent.id`;
+
+        const rows = db.prepare(standard_read_queries2).all();
+        res.json(rows);
+    } catch (error) {
+        console.log(error);
+        error_response(res,
+            '原因不明のエラー' + error);
+    }
+});
+
 
 // '/insert_dup'というPOSTのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsを作成する。
 app.post('/insert_dup', (req, res) => {

@@ -117,6 +117,8 @@ grid-template-areas:
         <li v-for="(TAG, TAG_INDEX) in all_tags">{{ TAG }}</li>
     </ul>
 
+    <button @click="change_likes_count_asc_or_desc">{{ likes_count_asc_or_desc === 'ASC' ? '▲' : '▼' }}: change_likes_count_asc_or_desc</button>
+
     <ul>
     <li v-for="(item, index) in response_message">
     <!-- <button>copy</button> -->
@@ -216,6 +218,7 @@ return {
     auto_complete_tags_cunrrent_tag: '',
 
     comment: '',
+    likes_count_asc_or_desc: 'desc',
 }
 },
 watch: {
@@ -396,7 +399,34 @@ async fetch_insert_dup(){
     await fetch_read_dups_parent();
 },
 async fetch_read_dups_parent(){
-    const res = await fetch('http://localhost:8000/read_dups_parent', {method: 'GET',headers: {'Content-Type': 'application/json',},});
+    let ADDITIONAL_PARAMETER = '';
+    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
+        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
+        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
+    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
+    const res = await fetch('http://localhost:8000/read_dups_parent'
+        + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
+            , {method: 'GET',headers: {'Content-Type': 'application/json',},});
+    const data = await res.json(); console.log(data);
+    this.response_message = data;
+},
+async fetch_read_dups_parent2(){
+    const res = await fetch('http://localhost:8000/read_dups_parent2', {method: 'GET',headers: {'Content-Type': 'application/json',},});
+    const data = await res.json(); console.log(this.to_ary(data));
+    // this.response_message = data;
+},
+
+async change_likes_count_asc_or_desc(){
+    this.likes_count_asc_or_desc = this.likes_count_asc_or_desc === 'ASC' ? 'DESC' : 'ASC';
+    // await fetch_read_dups_parent();
+    let ADDITIONAL_PARAMETER = '';
+    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
+        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
+        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
+    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
+    const res = await fetch('http://localhost:8000/read_dups_parent'
+        + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
+            , {method: 'GET',headers: {'Content-Type': 'application/json',},});
     const data = await res.json(); console.log(data);
     this.response_message = data;
 },
@@ -454,7 +484,6 @@ async fetch_add_tag(DUPS_PARENT_ID){
         }),
     });
     const data = await res.json(); console.log(data);
-    // this.response_message = data;
     await this.fetch_read_dups_parent();
 },
 async fetch_read_all_tags(){
