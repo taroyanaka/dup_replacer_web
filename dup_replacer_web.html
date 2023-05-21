@@ -54,11 +54,14 @@ grid-template-areas:
 .textarea_parent{
     background-color: blueviolet;
 }
-.accent_color{
+.accent_color_1{
     background-color: greenyellow;
 }
 .accent_color_2{
     background-color: yellow;
+}
+.accent_color_3{
+    background-color: orange;
 }
 </style>
 </head>
@@ -121,17 +124,28 @@ grid-template-areas:
 
     <ul>
     <li v-for="(item, index) in response_message">
-    <!-- <button>copy</button> -->
-    <button class="accent_color_2" @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
+    <template v-for="(ITEM_1, INDEX_1) in item">
+        <div v-if="INDEX_1.includes('tag') === false && INDEX_1.includes('comment') === false">{{ INDEX_1 }} : {{ ITEM_1 }}</div>
+        <div
+            v-if="INDEX_1.includes('tag') === true && INDEX_1.includes('comment') === false"
+            class="accent_color_3">{{ INDEX_1 }} : {{ ITEM_1 }}
+        </div>
+        <ul v-if="INDEX_1.includes('tag') === false && INDEX_1.includes('comment') === true && INDEX_1.includes('reply') === false">
+            <li class="accent_color_1">{{ INDEX_1 }} : {{ ITEM_1 }}</li>
+        </ul>
+        <ul v-if="INDEX_1.includes('reply') === true">
+            <li class="accent_color_2">{{ INDEX_1 }} : {{ ITEM_1 }}</li>
+        </ul>
+    </template>
+    <br>
+    <!-- <button class="accent_color_2" @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
     <button class="accent_color_2" @click="fetch_add_tag(item[0]['dups_parent_id'])">fetch_add_tag</button>
 
     <button class="accent_color_2" @click="fetch_add_comment(item[0]['dups_parent_id'])">fetch_add_comment</button>
     <input type="text" v-model="comment" class="comment" placeholder="comment">
-    <!-- <span>likes_count: </span><span>{{ item[0].likes_count }}</span> -->
     <button @click="fetch_like_dups_parent(item[0]['dups_parent_id'])">fetch_like_dups_parent</button>
     <button @click="fetch_delete_like_dups_parent(item[0]['dups_parent_id'])">fetch_delete_like_dups_parent</button>
     <template v-for="(ITEM_1, INDEX_1) in item">
-            <!-- <span>{{ITEM_1}}</span> -->
         <div>
             <div class="accent_color">{{ INDEX_1 }}</div>
             <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
@@ -143,7 +157,6 @@ grid-template-areas:
             <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
             <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
             <div><span>tags: </span><span>{{ ITEM_1.tags ? ITEM_1.tags[0].tags : null }}</span></div>
-            <!-- <div><span>comment_replies_reply: </span><span>{{ ITEM_1.comment_replies_reply ? ITEM_1.comment_replies_reply : null }}</span></div> -->
         </div>
         <div>
             <div>COMMENT</div>
@@ -154,19 +167,7 @@ grid-template-areas:
                     <span>{{ COMMENT.comment_user_name }}: </span>
                     <span>{{ COMMENT.comment_created_at }}: </span>
                     <ul v-if="COMMENT.comment_reply">
-                        <!-- <li v-for="(COMMENT_REPLY_ID, COMMENT_REPLY_IDX) in COMMENT.comment_reply_id.split(',')">COMMENT_REPLY_ID: {{ COMMENT_REPLY_ID }}</li> -->
-                        <!-- <li v-for="(COMMENT_REPLY, COMMENT_REPLY_IDX) in COMMENT.comment_reply.split(',')">COMMENT_REPLY {{ COMMENT_REPLY }}</li> -->
-                        <!-- <li v-for="(COMMENT_REPLY_CREATED_AT , COMMENT_REPLY_IDX) in COMMENT.comment_reply_created_at.split(',')">COMMENT_REPLY_CREATED_AT: {{ COMMENT_REPLY_CREATED_AT }}</li> -->
-                        <!-- <li v-for="(COMMENT_REPLY_UPDATED_AT , COMMENT_REPLY_IDX) in COMMENT.comment_reply_updated_at.split(',')">COMMENT_REPLY_UPDATED_AT: {{ COMMENT_REPLY_UPDATED_AT }}</li> -->
-                        <!-- <li v-for="(COMMENT_REPLY_USER_ID, COMMENT_REPLY_IDX) in COMMENT.comment_user_id.split(',')">COMMENT_REPLY_USER_ID: {{ COMMENT_REPLY_USER_ID }}</li> -->
-                        <!-- <li v-for="(COMMENT_REPLY_USER_NAME , COMMENT_REPLY_IDX) in COMMENT.comment_user_name.split(',')">COMMENT_REPLY_USER_NAME: {{ COMMENT_REPLY_USER_NAME }}</li> -->
-                        <!--
-                        comment_reply_id
-                        comment_reply
-                        comment_user_name
-                        -->
                         <li v-for="(ZIP_REPLY , ZIP_REPLY_IDX) in get_zip_reply(COMMENT)">
-                            <!-- ZIP_REPLY: {{ ZIP_REPLY }} -->
                             <span>comment_reply_id: {{ ZIP_REPLY[0] }}</span>
                             <span>comment_reply: {{ ZIP_REPLY[1] }}</span>
                             <span>comment_user_name: {{ ZIP_REPLY[2] }}</span>
@@ -176,10 +177,9 @@ grid-template-areas:
                     <input type="text" name="reply" class="reply" v-model="reply">
                     <button @click="fetch_add_comment_reply(COMMENT.comment_id)">fetch_add_comment_reply</button>
                 </li>
-                <!-- <li>COMMENT: {{ ITEM_1.comments_comment }}</li> -->
             </ul>
         </div>
-    </template>
+    </template> -->
     </li>
     </ul>
 </div>
@@ -404,7 +404,7 @@ async fetch_read_dups_parent(){
         'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
         'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
     const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
-    const res = await fetch('http://localhost:8000/read_dups_parent'
+    const res = await fetch('http://localhost:8000/read_dups_parent2'
         + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
             , {method: 'GET',headers: {'Content-Type': 'application/json',},});
     const data = await res.json(); console.log(data);
