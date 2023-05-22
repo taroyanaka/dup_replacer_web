@@ -263,14 +263,11 @@ get_zip_reply(COMMENT){
     ])
 },
 switch_user(){
-    switch (true) {
-        case this.name === 'name1' && this.password === 'password1':
-            this.name = 'name2'; this.password = 'password2'; break;
-        case this.name === 'name2' && this.password === 'password2':
-            this.name = 'GUEST'; this.password = 'GUEST_PASS'; break;
-        case this.name === 'GUEST' && this.password === 'GUEST_PASS':
-            this.name = 'name1'; this.password = 'password1'; break;
-        default: break;
+    switch (`${this.name}:${this.password}`) {
+    case 'name1:password1': this.name = 'name2'; this.password = 'password2'; break;
+    case 'name2:password2': this.name = 'GUEST'; this.password = 'GUEST_PASS'; break;
+    case 'GUEST:GUEST_PASS': this.name = 'name1'; this.password = 'password1'; break;
+    default: break;
     }
 },
 refresh_save_data() {
@@ -556,6 +553,7 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
     const data = await res.json(); console.log(data);
     await this.fetch_read_dups_parent();
 },
+
 
 
 
