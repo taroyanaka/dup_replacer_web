@@ -75,10 +75,10 @@ grid-template-areas:
 
 <div class="textarea_parent">
     <div v-for="(DATA, INDEX) in B_C_list" class="textarea_childs">
-        <textarea name="a" class="a" v-model="DATA[0]"></textarea>
-        <textarea name="b" class="b" v-model="DATA[1]"></textarea>
-        <textarea name="c" class="c" v-model="DATA[2]"></textarea>
-        <textarea name="d" class="d" v-model="DATA[3]"></textarea>
+        <textarea name="a" class="a" v-model="DATA[0]" @input="exe"></textarea>
+        <textarea name="b" class="b" v-model="DATA[1]" @input="exe"></textarea>
+        <textarea name="c" class="c" v-model="DATA[2]" @input="exe"></textarea>
+        <textarea name="d" class="d" v-model="DATA[3]" @input="exe"></textarea>
     </div>
     <button @click="duplicate_button">duplicate_button</button>
     <textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
@@ -222,13 +222,13 @@ return {
 }
 },
 watch: {
-   B_C_list: {
-     handler() {
-        this.in_reference_to_INDEX_0_apply();
-        this.make_result();
-     },
-     deep: true
-   },
+//    B_C_list: {
+//      handler() {
+//         this.in_reference_to_INDEX_0_apply();
+//         this.make_result();
+//      },
+//      deep: true
+//    },
 },
 mounted() {
 this.save_data_load();
@@ -243,6 +243,10 @@ beforeUpdated() {
 updated() {
 },
 methods: {
+exe(){
+    this.in_reference_to_INDEX_0_apply();
+    this.make_result();
+},
 // const d = [4, 5, 6];
 // const e = ['d', 'e', 'f'];
 // const f = [7, 8, 9];
@@ -300,7 +304,7 @@ async rating_down(INDEX){
 },
 async save_data_to_all_save(){
     this.refresh_save_data();
-    this.all_save.push(this.save_data);
+    this.all_save.push(R.clone(this.save_data));
     await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
 },
 async save_data_load() {
@@ -311,8 +315,6 @@ save_data_set(INDEX){
     console.log(INDEX);
     [
         this.B_C_list,
-        // [this.B_C_list[0], this.B_C_list[1], this.B_C_list[2]],
-        // this.to_ary(this.B_C_list).map(V=>[V[0], V[1], V[2]]),
         this.rating,
         this.when,
     ] = this.all_save[INDEX];
@@ -323,13 +325,9 @@ async save_data_delete(INDEX){
         await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
     }
 },
-sort_by_when(){
-    this.all_save.sort((a, b) => {
-        time_A = new Date(a[2]);
-        time_B = new Date(b[2]);
-        return this.sort_by === 'asc' ? time_A - time_B : time_B - time_A;
-    });
-    this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
+sort_by_when() {
+  this.all_save.sort((a, b) => this.sort_by === 'asc' ? new Date(a[2]) - new Date(b[2]) : new Date(b[2]) - new Date(a[2]));
+  this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
 },
 sort_by_rating(){
     this.all_save.sort((a, b) => {
