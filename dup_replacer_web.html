@@ -311,13 +311,8 @@ async save_data_load() {
     this.all_save = JSON.parse(await localforage.getItem('dup_replacer_web')) || [];
     this.temporary_all_save_for_filter = this.all_save;
 },
-save_data_set(INDEX){
-    console.log(INDEX);
-    [
-        this.B_C_list,
-        this.rating,
-        this.when,
-    ] = this.all_save[INDEX];
+save_data_set(index) {
+  [this.B_C_list, this.rating, this.when] = this.all_save[index];
 },
 async save_data_delete(INDEX){
     if (window.confirm("Do you really want to delete??🦖\n本当に削除する？?🦕")) {
@@ -329,11 +324,9 @@ sort_by_when() {
   this.all_save.sort((a, b) => this.sort_by === 'asc' ? new Date(a[2]) - new Date(b[2]) : new Date(b[2]) - new Date(a[2]));
   this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
 },
-sort_by_rating(){
-    this.all_save.sort((a, b) => {
-        return this.sort_by === 'asc' ? a[1] - b[1] : b[1] - a[1];
-    });
-    this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
+sort_by_rating() {
+  this.all_save.sort((a, b) => this.sort_by === 'asc' ? a[1] - b[1] : b[1] - a[1]);
+  this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
 },
 filter_by_text(){
     this.all_save = this.temporary_all_save_for_filter.filter(VAL => {
