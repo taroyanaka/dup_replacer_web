@@ -101,17 +101,6 @@ grid-template-areas:
 
 <div class="web_data_parent">
 
-<!--
-async fetch_like_dups_parent(DUPS_PARENT_ID){
-async fetch_delete_like_dups_parent(DUPS_PARENT_ID){
-async fetch_add_tag(DUPS_PARENT_ID){
-async fetch_read_all_tags(){
-async fetch_search_tag(){
-async fetch_add_comment(DUPS_PARENT_ID){
-async fetch_delete_comment(COMMENT_ID){
-async fetch_add_comment_reply(COMMENT_ID){
-async fetch_delete_comment_reply(COMMENT_REPLY_ID){
--->
 
 
     <input type="text" v-model="name" class="name" placeholder="name">
@@ -134,43 +123,53 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
 
     <button @click="change_likes_count_asc_or_desc">{{ likes_count_asc_or_desc === 'ASC' ? '▲' : '▼' }}: change_likes_count_asc_or_desc</button>
 
-    <ul>
-    <li v-for="(item, index) in response_message">
-        {{ item }}
 
-    <!-- {{ item['dups_parent_id'] }} -->
-    <button @click="fetch_like_dups_parent(item['dups_parent_id'])">fetch_like_dups_parent</button>
-    <button @click="fetch_delete_like_dups_parent(item['dups_parent_id'])">fetch_delete_like_dups_parent</button>
-    <button @click="fetch_add_tag(item['dups_parent_id'])">fetch_add_tag</button>
+<template v-for="(data, index) in response_message">
+<div>
+    <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
+    <p>Created at: {{ data.dups_parent_created_at }}</p>
+    <p>Updated at: {{ data.dups_parent_updated_at }}</p>
+    <p>User name: {{ data.user_name }}</p>
+    <!-- <p>content_group_id: {{ data.content_group_id }}</p> -->
+    <p>Dups content group ID: {{ data.dups_content_group_id }}</p>
+    <p>Likes count: {{ data.likes_count }}</p>
 
-    <input type="text" v-model="comment" class="comment" placeholder="comment">
-    <button @click="fetch_add_comment(item['dups_parent_id'])">fetch_add_comment</button>
-
-    <!-- dupsをv-forで展開する -->
-    <!-- <ul>
-        <li v-for="DUPS in make_dups_content_object(item)">
-            {{ DUPS }}
+    <!-- <div v-for="(parent, index) in data" :key="index"> -->
+        <!-- content_group_id: {{ parent.dups_content_group_id }} -->
+      <ul style="margin-left: 2rem;">
+        <li v-for="(dup, index) in data['dups']" :key="index">
+            {{ dup.dups_content_1 }}
+            {{ dup.dups_content_2 }}
+            {{ dup.dups_content_3 }}
+            {{ dup.dups_content_4 }}
         </li>
-    </ul> -->
+      </ul>
+    <!-- </div> -->
 
-    <!-- {{ item.comment_id }} -->
-    <ul>
-        <li v-for="COMMENT_REPLY in item.comment_id ? make_comment_object(item) : []">
-            {{ COMMENT_REPLY }}
+    <ul style="margin-left: 4rem;">
+        <li v-for="(comment, index) in data['comments_and_replies']" :key="index">
+            <!-- <h3>Comment {{ index + 1 }}</h3> -->
+            <!-- <p>Comment ID: {{ comment.comment_id }}</p> -->
+            <p>Comment: {{ comment.comment }}</p>
+            <!-- <p>Created at: {{ comment.comment_created_at }}</p> -->
+            <!-- <p>Updated at: {{ comment.comment_updated_at }}</p> -->
+            <!-- <p>User name: {{ comment.comment_user_name }}</p> -->
+            <!-- <p>User ID: {{ comment.comment_user_id }}</p> -->
+            <ul style="margin-left: 2rem;">
+            <li v-for="(reply, index) in comment['comment_replies']" :key="index">
+                <h4>Reply {{ index + 1 }}</h4>
+                <p>Reply: {{ reply }}</p>
+            </li>
+            </ul>
         </li>
     </ul>
-    <!-- <input type="text" v-model="reply" class="reply" placeholder="reply" v-if="COMMENT_REPLY"> -->
+</div>
+</template>
 
-    <div>
-        <input type="text" v-model="tag" class="tag" placeholder="tag">
-        <button @click="fetch_add_tag(item['dups_parent_id'])">fetch_add_tag</button>
-    </div>
 
-    <br>
-    <br>
 
-    </li>
-    </ul>
+
+
 </div>
 
 
