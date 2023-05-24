@@ -153,110 +153,10 @@ LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
 WHERE users.username = ? AND users.userpassword = ?
 `).get(REQ.body.name, REQ.body.password);
 
-// '/read_dups_parent'というGETのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsとそれを紐づけるuserを取得する。
+// '/read_dups_parent2'というGETのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsとそれを紐づけるuserを取得する。
 // それらの全てのidとcontent1とcontent2とcontent3を返すとcreated_atとupdated_atとuserのnameを返す
 // dups_parentのlike数も返す、dups_parentに紐づくtagも返す。dups_parentに紐づくcommentとcomment_repliesも返す。
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
-app.get('/read_dups_parent', (req, res) => {
-    try {
-    let rows;
-    const standard_read_queries = `SELECT
-dups_parent.id AS dups_parent_id,
-dups_parent.created_at AS dups_parent_created_at,
-dups_parent.updated_at AS dups_parent_updated_at,
-users.username AS user_name,
-dups.content_group_id AS dups_content_group_id,
-dups.content_1 AS dups_content_1,
-dups.content_2 AS dups_content_2,
-dups.content_3 AS dups_content_3,
-
-(SELECT COUNT(*)
-    FROM likes
-        WHERE likes.dups_parent_id = dups_parent.id) AS likes_count
-
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-`;
-// console.log('likes_count ASC');
-    switch (true) {
-    case req.query.ORDER_BY === undefined || req.query.ASC_OR_DESC === undefined:
-        console.log('no ORDER_BY or ASC_OR_DESC');
-        rows = db.prepare(standard_read_queries).all(); break;
-    case req.query.ORDER_BY === "likes_count" && req.query.ASC_OR_DESC === 'ASC':
-        console.log('likes_count ASC');
-        rows = db.prepare(standard_read_queries + 'ORDER BY likes_count ASC').all(); break;
-    case req.query.ORDER_BY === "likes_count" && req.query.ASC_OR_DESC === 'DESC':
-        console.log('likes_count DESC');
-        rows = db.prepare(standard_read_queries + 'ORDER BY likes_count DESC').all(); break;
-    default: break;
-    }
-
-    // 下記のget_tagsとgroupByは間違ったコードだが他の書き方がわからないのでとりあえずこれで動かす
-    const get_tags = (dups_parent_id) => db.prepare(
-        `SELECT
-        GROUP_CONCAT(tags.tag) AS tags
-        FROM dups_parent
-        JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-        JOIN tags ON dups_parent_tags.tag_id = tags.id
-        WHERE dups_parent.id = ?
-    `).all(dups_parent_id);
-
-    const get_comments_and_replies_group_by_comment_id = (dups_parent_id) => db.prepare(
-        `SELECT
-        comments.id AS comment_id,
-        comments.comment AS comment,
-        comments.created_at AS comment_created_at,
-        comments.updated_at AS comment_updated_at,
-        GROUP_CONCAT(comment_replies.id) AS comment_reply_id,
-        GROUP_CONCAT(comment_replies.reply) AS comment_reply,
-        GROUP_CONCAT(comment_replies.created_at) AS comment_reply_created_at,
-        GROUP_CONCAT(comment_replies.updated_at) AS comment_reply_updated_at,
-        GROUP_CONCAT(users.username) AS comment_user_name,
-        GROUP_CONCAT(users.id) AS comment_user_id
-        
-        FROM dups_parent
-        LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
-        LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
-        LEFT JOIN users ON comments.user_id = users.id
-
-        WHERE dups_parent.id = ?
-        GROUP BY comments.id
-    `).all(dups_parent_id);
-
-
-
-
-    function groupBy(array, key) {
-        return array.reduce((result, currentValue) => {
-            (result[currentValue[key]] = result[currentValue[key]] || []).push(
-                currentValue
-            );
-            return result;
-        }, {});
-    };
-
-    const new_rows = rows.map(item => {
-        return {
-            ...item, // 元のオブジェクトを展開
-            tags: get_tags(item.dups_parent_id),
-            comments_and_replies: get_comments_and_replies_group_by_comment_id(item.dups_parent_id)
-        }
-    });
-
-    // console.log(new_rows);
-
-    const group_rows = groupBy(new_rows, 'dups_parent_id');
-
-    console.log(group_rows);
-    res.json(group_rows);
-    } catch (error) {
-        console.log(error);
-        error_response(res,
-            '原因不明のエラー' + error);
-    }
-});
-
-
 app.get('/read_dups_parent2', (req, res) => {
   try {
     const likes_ORDER_BY_ASC_OR_DESC = req.query.ORDER_BY_ASC_OR_DESC === 'ASC' ? 'ASC' : 'DESC';
@@ -339,60 +239,6 @@ app.get('/read_dups_parent2', (req, res) => {
         dups,
         tags,
         comments_and_replies,
-      };
-    });
-
-    res.json(result);
-  } catch (error) {
-    console.log(error);
-    error_response(res, '原因不明のエラー' + error);
-  }
-});
-
-
-app.get('/read_dups_parent3', (req, res) => {
-  try {
-    const likes_ORDER_BY_ASC_OR_DESC = req.query.ORDER_BY_ASC_OR_DESC === 'ASC' ? 'ASC' : 'DESC';
-    const dups_parent = db.prepare(`
-      SELECT
-        dups_parent.id AS dups_parent_id,
-        dups_parent.created_at AS dups_parent_created_at,
-        dups_parent.updated_at AS dups_parent_updated_at,
-        users.username AS user_name,
-        GROUP_CONCAT(DISTINCT dups.content_group_id) AS dups_content_group_id,
-        COUNT(likes.dups_parent_id) AS likes_count,
-        GROUP_CONCAT(DISTINCT tags.tag) AS tags,
-        GROUP_CONCAT(DISTINCT comments.comment) AS comments,
-        GROUP_CONCAT(DISTINCT comment_replies.reply) AS comment_replies
-      FROM dups_parent
-      LEFT JOIN users ON dups_parent.user_id = users.id
-      LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-      LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-      LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-      LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
-      LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
-      LEFT JOIN likes ON likes.dups_parent_id = dups_parent.id
-      GROUP BY dups_parent.id
-    `).all();
-
-    const result = dups_parent.map(parent => {
-      const dups = db.prepare(`
-        SELECT
-          dups.id AS dups_id,
-          dups.content_1 AS dups_content_1,
-          dups.content_2 AS dups_content_2,
-          dups.content_3 AS dups_content_3,
-          dups.content_4 AS dups_content_4
-        FROM dups
-        WHERE dups.content_group_id = ?
-      `).all(parent.dups_parent_id);
-
-      return {
-        ...parent,
-        dups,
-        tags: parent.tags.split(','),
-        comments: parent.comments.split(','),
-        comment_replies: parent.comment_replies.split(',')
       };
     });
 
