@@ -147,13 +147,14 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
     <button @click="fetch_add_comment(item['dups_parent_id'])">fetch_add_comment</button>
 
     <!-- <button @click="fetch_add_comment_reply(item['dups_parent_id'][1])">fetch_add_comment_reply</button> -->
-    <!-- {{ item.comment_id }} -->
+    {{ item.comment_id }}
     <ul>
-        <li v-for="COMMENT_REPLY in item.comment_id ? make_comment_array(item) : []">
+        <li v-for="COMMENT_REPLY in item.comment_id ? make_comment_object(item) : []">
             {{ COMMENT_REPLY }}
-            <input type="text" v-model="reply" class="reply" placeholder="reply" v-if="COMMENT_REPLY">
         </li>
     </ul>
+    <!-- <input type="text" v-model="reply" class="reply" placeholder="reply" v-if="COMMENT_REPLY"> -->
+
     <div>
         <input type="text" v-model="tag" class="tag" placeholder="tag">
         <button @click="fetch_add_tag(item['dups_parent_id'])">fetch_add_tag</button>
@@ -526,8 +527,15 @@ async change_likes_count_asc_or_desc(){
 server_data_edit_for_client_data(){
     return this.to_ary(this.response_message)
 },
-make_comment_array(COMMENT){
-    return this.to_ary(COMMENT.comment);
+make_comment_object(COMMENT){
+    return {
+        comment_id: COMMENT.comment_id.split(','),
+        comment: COMMENT.comment.split(','),
+        // created_at: COMMENT.created_at.split(','),
+        // updated_at: COMMENT.updated_at.split(','),
+        // user_name: COMMENT.user_name.split(','),
+        // user_id: COMMENT.user_id.split(','),
+    };  
 },
 
 
