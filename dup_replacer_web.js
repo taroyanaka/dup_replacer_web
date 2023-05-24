@@ -259,6 +259,43 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
 
 app.get('/read_dups_parent2', (req, res) => {
   try {
+// 全てのdups_parentとそれに紐づくdupsを返す
+const standard_read_queries2 = `SELECT
+dups_parent.id AS dups_parent_id,
+dups_parent.created_at AS dups_parent_created_at,
+dups_parent.updated_at AS dups_parent_updated_at,
+users.username AS user_name,
+GROUP_CONCAT(DISTINCT dups.content_group_id) AS dups_content_group_id,
+GROUP_CONCAT(DISTINCT dups.content_1) AS dups_content_1,
+GROUP_CONCAT(DISTINCT dups.content_2) AS dups_content_2,
+GROUP_CONCAT(DISTINCT dups.content_3) AS dups_content_3,
+(SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
+GROUP_CONCAT(DISTINCT tags.tag) AS tags,
+GROUP_CONCAT(DISTINCT comments.id) AS comment_id,
+GROUP_CONCAT(DISTINCT comments.comment) AS comment,
+GROUP_CONCAT(DISTINCT comments.created_at) AS comment_created_at,
+GROUP_CONCAT(DISTINCT comments.updated_at) AS comment_updated_at,
+GROUP_CONCAT(DISTINCT comment_replies.id) AS comment_reply_id,
+GROUP_CONCAT(DISTINCT comment_replies.reply) AS comment_reply,
+GROUP_CONCAT(DISTINCT comment_replies.created_at) AS comment_reply_created_at,
+GROUP_CONCAT(DISTINCT comment_replies.updated_at) AS comment_reply_updated_at,
+GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
+GROUP_CONCAT(DISTINCT users.id) AS comment_user_id
+
+
+FROM dups_parent
+LEFT JOIN users ON dups_parent.user_id = users.id
+LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
+LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
+
+GROUP BY dups_parent.id
+`;
+
+
+
     const standard_read_queries3 = `
       SELECT
         dups_parent.id AS dups_parent_id,
@@ -286,7 +323,8 @@ app.get('/read_dups_parent2', (req, res) => {
       GROUP BY dups_parent.id
     `;
 
-    const rows1 = db.prepare(standard_read_queries3).all();
+    // const rows3 = db.prepare(standard_read_queries3).all();
+    const rows2 = db.prepare(standard_read_queries2).all();
 
     const get_replies = (comment_id) => {
       console.log("get_replies");
@@ -319,7 +357,9 @@ const result_with_comment_replies = (rows) => {
     })
 }
 
-    res.json(result_with_comment_replies(rows1));
+    res.json(rows2);
+    // res.json(rows3);
+    // res.json(result_with_comment_replies(rows3));
   } catch (error) {
     console.log(error);
     error_response(res, '原因不明のエラー' + error);
