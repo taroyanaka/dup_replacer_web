@@ -100,14 +100,26 @@ grid-template-areas:
 </div>
 
 <div class="web_data_parent">
+
+<!--
+async fetch_like_dups_parent(DUPS_PARENT_ID){
+async fetch_delete_like_dups_parent(DUPS_PARENT_ID){
+async fetch_add_tag(DUPS_PARENT_ID){
+async fetch_read_all_tags(){
+async fetch_search_tag(){
+async fetch_add_comment(DUPS_PARENT_ID){
+async fetch_delete_comment(COMMENT_ID){
+async fetch_add_comment_reply(COMMENT_ID){
+async fetch_delete_comment_reply(COMMENT_REPLY_ID){
+-->
+
+
     <input type="text" v-model="name" class="name" placeholder="name">
     <input type="text" v-model="password" class="password" placeholder="password">
     <button @click="switch_user">switch_user</button>
 
-
     <button @click="fetch_insert_dup">fetch_insert_dup</button>
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
-    <input type="text" v-model="tag" class="tag" placeholder="tag">
 
     <div>
     <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
@@ -131,55 +143,38 @@ grid-template-areas:
             class="accent_color_3">{{ INDEX_1 }} : {{ ITEM_1 }}
         </div>
         <ul v-if="INDEX_1.includes('tag') === false && INDEX_1.includes('comment') === true && INDEX_1.includes('reply') === false">
-            <li class="accent_color_1">{{ INDEX_1 }} : {{ ITEM_1 }}</li>
+
+            <li class="accent_color_1">{{ INDEX_1 }} : 
+                <ul>
+<li v-for="(COMMENT, COMMENT_INDEX) in ITEM_1 ? ITEM_1.split(',') : null">
+    <span>{{ COMMENT }}</span>
+    <span v-if="INDEX_1 === 'comment_id'"><button @click="fetch_delete_comment(COMMENT_INDEX)">delete_comment</button></span>
+
+    {{ item['comment_reply_comment_id'] }}
+    
+</li>
+                </ul>
+            </li>
         </ul>
         <ul v-if="INDEX_1.includes('reply') === true">
             <li class="accent_color_2">{{ INDEX_1 }} : {{ ITEM_1 }}</li>
         </ul>
     </template>
-    <br>
-    <!-- <button class="accent_color_2" @click="fetched_data_localforage(item[0]['dups_parent_id'])">copy</button>
-    <button class="accent_color_2" @click="fetch_add_tag(item[0]['dups_parent_id'])">fetch_add_tag</button>
+    <!-- {{ item['dups_parent_id'] }} -->
+    <button @click="fetch_like_dups_parent(item['dups_parent_id'])">fetch_like_dups_parent</button>
+    <button @click="fetch_delete_like_dups_parent(item['dups_parent_id'])">fetch_delete_like_dups_parent</button>
+    <button @click="fetch_add_tag(item['dups_parent_id'])">fetch_add_tag</button>
 
-    <button class="accent_color_2" @click="fetch_add_comment(item[0]['dups_parent_id'])">fetch_add_comment</button>
     <input type="text" v-model="comment" class="comment" placeholder="comment">
-    <button @click="fetch_like_dups_parent(item[0]['dups_parent_id'])">fetch_like_dups_parent</button>
-    <button @click="fetch_delete_like_dups_parent(item[0]['dups_parent_id'])">fetch_delete_like_dups_parent</button>
-    <template v-for="(ITEM_1, INDEX_1) in item">
-        <div>
-            <div class="accent_color">{{ INDEX_1 }}</div>
-            <div><span>dups_parent_id: </span><span>{{ ITEM_1.dups_parent_id }}</span></div>
-            <div><span>dups_parent_created_at: </span><span>{{ ITEM_1.dups_parent_created_at }}</span></div>
-            <div><span>user_name: </span><span>{{ ITEM_1.user_name }}</span></div>
-            <div><span>dups_content_group_id: </span><span>{{ ITEM_1.dups_content_group_id }}</span></div>
-            <div><span>dups_content_1: </span><span>{{ ITEM_1.dups_content_1 }}</span></div>
-            <div><span>dups_content_2: </span><span>{{ ITEM_1.dups_content_2 }}</span></div>
-            <div><span>dups_content_3: </span><span>{{ ITEM_1.dups_content_3 }}</span></div>
-            <div><span>likes_count: </span><span>{{ ITEM_1.likes_count }}</span></div>
-            <div><span>tags: </span><span>{{ ITEM_1.tags ? ITEM_1.tags[0].tags : null }}</span></div>
-        </div>
-        <div>
-            <div>COMMENT</div>
-            <ul>
-                <li v-for="(COMMENT, COMMENT_IDX) in ITEM_1.comments_and_replies">
-                    <button @click="fetch_delete_comment(COMMENT.comment_id)">fetch_delete_comment</button>
-                    <span>{{ COMMENT.comment }}: </span>
-                    <span>{{ COMMENT.comment_user_name }}: </span>
-                    <span>{{ COMMENT.comment_created_at }}: </span>
-                    <ul v-if="COMMENT.comment_reply">
-                        <li v-for="(ZIP_REPLY , ZIP_REPLY_IDX) in get_zip_reply(COMMENT)">
-                            <span>comment_reply_id: {{ ZIP_REPLY[0] }}</span>
-                            <span>comment_reply: {{ ZIP_REPLY[1] }}</span>
-                            <span>comment_user_name: {{ ZIP_REPLY[2] }}</span>
-                            <button @click="fetch_delete_comment_reply(ZIP_REPLY[0])">fetch_delete_comment_reply</button>
-                        </li>
-                    </ul>
-                    <input type="text" name="reply" class="reply" v-model="reply">
-                    <button @click="fetch_add_comment_reply(COMMENT.comment_id)">fetch_add_comment_reply</button>
-                </li>
-            </ul>
-        </div>
-    </template> -->
+    <button @click="fetch_add_comment(item['dups_parent_id'])">fetch_add_comment</button>
+    <div>
+        <input type="text" v-model="tag" class="tag" placeholder="tag">
+        <button @click="fetch_add_tag(item['dups_parent_id'])">fetch_add_tag</button>
+    </div>
+
+    <br>
+    <br>
+
     </li>
     </ul>
 </div>
@@ -398,26 +393,6 @@ async fetch_read_dups_parent(){
     const data = await res.json(); console.log(data);
     this.response_message = data;
 },
-async fetch_read_dups_parent2(){
-    const res = await fetch('http://localhost:8000/read_dups_parent2', {method: 'GET',headers: {'Content-Type': 'application/json',},});
-    const data = await res.json(); console.log(this.to_ary(data));
-    // this.response_message = data;
-},
-
-async change_likes_count_asc_or_desc(){
-    this.likes_count_asc_or_desc = this.likes_count_asc_or_desc === 'ASC' ? 'DESC' : 'ASC';
-    // await fetch_read_dups_parent();
-    let ADDITIONAL_PARAMETER = '';
-    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
-        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
-        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
-    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
-    const res = await fetch('http://localhost:8000/read_dups_parent'
-        + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
-            , {method: 'GET',headers: {'Content-Type': 'application/json',},});
-    const data = await res.json(); console.log(data);
-    this.response_message = data;
-},
 async fetch_delete_all_dups_and_dups_parent(){
     const res = await fetch('http://localhost:8000/delete_all_dups_and_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
@@ -484,7 +459,7 @@ async fetch_read_all_tags(){
     const data = await res.json(); console.log(data);
     this.all_tags = data.tags;
 },
-async search_tag(){ // search_tagはauto_complete_tagsとauto_complete_tags_cunrrent_tagを更新する
+async fetch_search_tag(){ // search_tagはauto_complete_tagsとauto_complete_tags_cunrrent_tagを更新する
     this.auto_complete_tags = [];
     const res = await fetch('http://localhost:8000/get_tags_for_autocomplete', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
@@ -545,7 +520,20 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
     await this.fetch_read_dups_parent();
 },
 
-
+async change_likes_count_asc_or_desc(){
+    this.likes_count_asc_or_desc = this.likes_count_asc_or_desc === 'ASC' ? 'DESC' : 'ASC';
+    // await fetch_read_dups_parent();
+    let ADDITIONAL_PARAMETER = '';
+    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
+        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
+        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
+    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
+    const res = await fetch('http://localhost:8000/read_dups_parent'
+        + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
+            , {method: 'GET',headers: {'Content-Type': 'application/json',},});
+    const data = await res.json(); console.log(data);
+    this.response_message = data;
+},
 
 
 

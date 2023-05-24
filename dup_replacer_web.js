@@ -276,14 +276,17 @@ dups.content_3 AS dups_content_3,
     GROUP_CONCAT(DISTINCT comments.created_at) AS comment_created_at,
     GROUP_CONCAT(DISTINCT comments.updated_at) AS comment_updated_at,
     
+    
 
+GROUP_CONCAT(DISTINCT comment_replies.id) AS comment_reply_id,
 
-  GROUP_CONCAT(DISTINCT comment_replies.id) AS comment_reply_id,
-  GROUP_CONCAT(DISTINCT comment_replies.reply) AS comment_reply,
-  GROUP_CONCAT(DISTINCT comment_replies.created_at) AS comment_reply_created_at,
-  GROUP_CONCAT(DISTINCT comment_replies.updated_at) AS comment_reply_updated_at,
-  GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
-  GROUP_CONCAT(DISTINCT users.id) AS comment_user_id 
+GROUP_CONCAT(DISTINCT comment_replies.comment_id) AS comment_reply_comment_id,
+
+GROUP_CONCAT(DISTINCT comment_replies.reply) AS comment_reply,
+GROUP_CONCAT(DISTINCT comment_replies.created_at) AS comment_reply_created_at,
+GROUP_CONCAT(DISTINCT comment_replies.updated_at) AS comment_reply_updated_at,
+GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
+GROUP_CONCAT(DISTINCT users.id) AS comment_user_id 
 FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
 LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
 LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
