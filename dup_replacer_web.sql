@@ -55,6 +55,7 @@ CREATE TABLE dups (
   content_1 TEXT NOT NULL,
   content_2 TEXT NOT NULL,
   content_3 TEXT NOT NULL,
+  content_4 TEXT NOT NULL,
   FOREIGN KEY (dups_parent_id) REFERENCES dups_parent(id)
 );
 
@@ -131,3 +132,4 @@ INSERT INTO users (user_permission_id, username, userpassword, created_at, updat
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 2, DATETIME('now'), DATETIME('now'));
 -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 3, DATETIME('now'), DATETIME('now'));
+

@@ -146,8 +146,14 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
     <input type="text" v-model="comment" class="comment" placeholder="comment">
     <button @click="fetch_add_comment(item['dups_parent_id'])">fetch_add_comment</button>
 
-    <!-- <button @click="fetch_add_comment_reply(item['dups_parent_id'][1])">fetch_add_comment_reply</button> -->
-    {{ item.comment_id }}
+    <!-- dupsをv-forで展開する -->
+    <!-- <ul>
+        <li v-for="DUPS in make_dups_content_object(item)">
+            {{ DUPS }}
+        </li>
+    </ul> -->
+
+    <!-- {{ item.comment_id }} -->
     <ul>
         <li v-for="COMMENT_REPLY in item.comment_id ? make_comment_object(item) : []">
             {{ COMMENT_REPLY }}
@@ -538,7 +544,17 @@ make_comment_object(COMMENT){
     };  
 },
 make_dups_content_object(DUPS){
-
+    const data = {
+        dups_content_group_id: DUPS.dups_content_group_id.split(','),
+        dups_content_1: DUPS.dups_content_1.split(','),
+        dups_content_2: DUPS.dups_content_2.split(','),
+        dups_content_3: DUPS.dups_content_3.split(','),
+        dups_content_4: DUPS.dups_content_4.split(','),
+    };
+    // dataをR.zipする
+    res = R.zip(data.dups_content_group_id, data.dups_content_1, data.dups_content_2, data.dups_content_3);
+    console.log(res);
+    return data;
 },
 
 
