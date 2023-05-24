@@ -256,52 +256,135 @@ LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
     }
 });
 
+
 app.get('/read_dups_parent2', (req, res) => {
-    try {
-const standard_read_queries2 =
-`SELECT
-dups_parent.id AS dups_parent_id,
-dups_parent.created_at AS dups_parent_created_at,
-dups_parent.updated_at AS dups_parent_updated_at,
-users.username AS user_name,
-dups.content_group_id AS dups_content_group_id,
-dups.content_1 AS dups_content_1,
-dups.content_2 AS dups_content_2,
-dups.content_3 AS dups_content_3,
-(SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
-  GROUP_CONCAT(DISTINCT tags.tag) AS tags,
+  try {
+    const standard_read_queries3 = `
+      SELECT
+        dups_parent.id AS dups_parent_id,
+        dups_parent.created_at AS dups_parent_created_at,
+        dups_parent.updated_at AS dups_parent_updated_at,
+        users.username AS user_name,
+        dups.content_group_id AS dups_content_group_id,
+        dups.content_1 AS dups_content_1,
+        dups.content_2 AS dups_content_2,
+        dups.content_3 AS dups_content_3,
+        (SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
+        GROUP_CONCAT(DISTINCT tags.tag) AS tags,
+        GROUP_CONCAT(DISTINCT comments.id) AS comment_id,
+        GROUP_CONCAT(DISTINCT comments.comment) AS comment,
+        GROUP_CONCAT(DISTINCT comments.created_at) AS comment_created_at,
+        GROUP_CONCAT(DISTINCT comments.updated_at) AS comment_updated_at,
+        GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
+        GROUP_CONCAT(DISTINCT users.id) AS comment_user_id 
+      FROM dups_parent
+      LEFT JOIN users ON dups_parent.user_id = users.id
+      LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+      LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+      LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+      LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
+      GROUP BY dups_parent.id
+    `;
 
-  GROUP_CONCAT(DISTINCT comments.id) AS comment_id,
-    GROUP_CONCAT(DISTINCT comments.comment) AS comment,
-    GROUP_CONCAT(DISTINCT comments.created_at) AS comment_created_at,
-    GROUP_CONCAT(DISTINCT comments.updated_at) AS comment_updated_at,
-    
-    
+    const rows1 = db.prepare(standard_read_queries3).all();
 
-GROUP_CONCAT(DISTINCT comment_replies.id) AS comment_reply_id,
-
-GROUP_CONCAT(DISTINCT comment_replies.comment_id) AS comment_reply_comment_id,
-
-GROUP_CONCAT(DISTINCT comment_replies.reply) AS comment_reply,
-GROUP_CONCAT(DISTINCT comment_replies.created_at) AS comment_reply_created_at,
-GROUP_CONCAT(DISTINCT comment_replies.updated_at) AS comment_reply_updated_at,
-GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
-GROUP_CONCAT(DISTINCT users.id) AS comment_user_id 
-FROM dups_parent LEFT JOIN users ON dups_parent.user_id = users.id
-LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
-LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
-LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
-LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
-LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
-GROUP BY dups_parent.id`;
-
-        const rows = db.prepare(standard_read_queries2).all();
-        res.json(rows);
-    } catch (error) {
-        console.log(error);
-        error_response(res,
-            '原因不明のエラー' + error);
+    const get_replies = (comment_id) => {
+      console.log("get_replies");
+      const result = db.prepare(`
+        SELECT
+          comment_replies.id AS comment_reply_id,
+          comment_replies.comment_id AS comment_reply_comment_id,
+          comment_replies.reply AS comment_reply,
+          comment_replies.created_at AS comment_reply_created_at,
+          comment_replies.updated_at AS comment_reply_updated_at,
+          users.username AS comment_user_name,
+          users.id AS comment_user_id
+        FROM comment_replies
+        LEFT JOIN users ON comment_replies.user_id = users.id
+        WHERE comment_replies.comment_id = ?
+      `).all(comment_id);
+      console.log(result);
+      return result;
     }
+
+const result_with_comment_replies = (rows) => {
+    // console.log("result_with_comment_replies");
+    return rows.map(row => {
+        // console.log(row.comment_id);
+        const multi_comment = row.comment_id ? row.comment_id.split(',').map(V=>get_replies(V)) : [];
+        return {
+            ...row,
+            comment_replies: multi_comment,
+        }
+    })
+}
+
+    res.json(result_with_comment_replies(rows1));
+  } catch (error) {
+    console.log(error);
+    error_response(res, '原因不明のエラー' + error);
+  }
+});
+
+app.get('/read_dups_parent3', (req, res) => {
+  try {
+// dups_parentを参照する全てのデータを取得するクエリ
+    const standard_read_queries = `
+      SELECT
+        dups_parent.id AS dups_parent_id,
+        dups_parent.created_at AS dups_parent_created_at,
+        dups_parent.updated_at AS dups_parent_updated_at,
+        users.username AS user_name,
+        dups.content_group_id AS dups_content_group_id,
+        dups.content_1 AS dups_content_1,
+        dups.content_2 AS dups_content_2,
+        dups.content_3 AS dups_content_3,
+        (SELECT COUNT(*) FROM likes WHERE likes.dups_parent_id = dups_parent.id) AS likes_count,
+        GROUP_CONCAT(DISTINCT tags.tag) AS tags,
+
+        GROUP_CONCAT(DISTINCT comments.id) AS comment_id,
+        GROUP_CONCAT(DISTINCT comments.comment) AS comment,
+        GROUP_CONCAT(DISTINCT comments.created_at) AS comment_created_at,
+        GROUP_CONCAT(DISTINCT comments.updated_at) AS comment_updated_at,
+        GROUP_CONCAT(DISTINCT users.username) AS comment_user_name,
+        GROUP_CONCAT(DISTINCT users.id) AS comment_user_id
+
+      FROM dups_parent
+      LEFT JOIN users ON dups_parent.user_id = users.id
+      LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id
+      LEFT JOIN dups_parent_tags ON dups_parent.id = dups_parent_tags.dups_parent_id
+      LEFT JOIN tags ON dups_parent_tags.tag_id = tags.id
+      LEFT JOIN comments ON dups_parent.id = comments.dups_parent_id
+      LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
+      LEFT JOIN likes ON dups_parent.id = likes.dups_parent_id
+      GROUP BY dups_parent.id;
+    `;
+
+    const rows = db.prepare(standard_read_queries).all();
+
+    // rowsにreplyを追加する
+    const get_replies = (comment_id) => {
+        console.log("get_replies");
+        return db.prepare(`
+            SELECT
+            comment_replies.id AS comment_reply_id,
+            comment_replies.comment_id AS comment_reply_comment_id,
+            comment_replies.reply AS comment_reply,
+            comment_replies.created_at AS comment_reply_created_at,
+            comment_replies.updated_at AS comment_reply_updated_at,
+            users.username AS comment_user_name,
+            users.id AS comment_user_id
+            FROM comment_replies
+            LEFT JOIN users ON comment_replies.user_id = users.id
+            WHERE comment_replies.comment_id = ?
+        `).all(comment_id);
+    }
+
+    res.json(rows);
+  } catch (error) {
+    console.log(error);
+    error_response(res, '原因不明のエラー' + error);
+  }
 });
 
 

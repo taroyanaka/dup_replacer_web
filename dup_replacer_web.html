@@ -136,30 +136,8 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
 
     <ul>
     <li v-for="(item, index) in response_message">
-    <template v-for="(ITEM_1, INDEX_1) in item">
-        <div v-if="INDEX_1.includes('tag') === false && INDEX_1.includes('comment') === false">{{ INDEX_1 }} : {{ ITEM_1 }}</div>
-        <div
-            v-if="INDEX_1.includes('tag') === true && INDEX_1.includes('comment') === false"
-            class="accent_color_3">{{ INDEX_1 }} : {{ ITEM_1 }}
-        </div>
-        <ul v-if="INDEX_1.includes('tag') === false && INDEX_1.includes('comment') === true && INDEX_1.includes('reply') === false">
+        {{ item }}
 
-            <li class="accent_color_1">{{ INDEX_1 }} : 
-                <ul>
-<li v-for="(COMMENT, COMMENT_INDEX) in ITEM_1 ? ITEM_1.split(',') : null">
-    <span>{{ COMMENT }}</span>
-    <span v-if="INDEX_1 === 'comment_id'"><button @click="fetch_delete_comment(COMMENT_INDEX)">delete_comment</button></span>
-
-    {{ item['comment_reply_comment_id'] }}
-    
-</li>
-                </ul>
-            </li>
-        </ul>
-        <ul v-if="INDEX_1.includes('reply') === true">
-            <li class="accent_color_2">{{ INDEX_1 }} : {{ ITEM_1 }}</li>
-        </ul>
-    </template>
     <!-- {{ item['dups_parent_id'] }} -->
     <button @click="fetch_like_dups_parent(item['dups_parent_id'])">fetch_like_dups_parent</button>
     <button @click="fetch_delete_like_dups_parent(item['dups_parent_id'])">fetch_delete_like_dups_parent</button>
@@ -167,6 +145,15 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
 
     <input type="text" v-model="comment" class="comment" placeholder="comment">
     <button @click="fetch_add_comment(item['dups_parent_id'])">fetch_add_comment</button>
+
+    <!-- <button @click="fetch_add_comment_reply(item['dups_parent_id'][1])">fetch_add_comment_reply</button> -->
+    <!-- {{ item.comment_id }} -->
+    <ul>
+        <li v-for="COMMENT_REPLY in item.comment_id ? make_comment_array(item) : []">
+            {{ COMMENT_REPLY }}
+            <input type="text" v-model="reply" class="reply" placeholder="reply" v-if="COMMENT_REPLY">
+        </li>
+    </ul>
     <div>
         <input type="text" v-model="tag" class="tag" placeholder="tag">
         <button @click="fetch_add_tag(item['dups_parent_id'])">fetch_add_tag</button>
@@ -388,6 +375,7 @@ async fetch_read_dups_parent(){
         'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
     const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
     const res = await fetch('http://localhost:8000/read_dups_parent2'
+    // const res = await fetch('http://localhost:8000/read_dups_parent3'
         + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
             , {method: 'GET',headers: {'Content-Type': 'application/json',},});
     const data = await res.json(); console.log(data);
@@ -535,6 +523,12 @@ async change_likes_count_asc_or_desc(){
     this.response_message = data;
 },
 
+server_data_edit_for_client_data(){
+    return this.to_ary(this.response_message)
+},
+make_comment_array(COMMENT){
+    return this.to_ary(COMMENT.comment);
+},
 
 
 }}).mount('.app');
