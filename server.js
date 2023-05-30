@@ -136,6 +136,11 @@ app.use(cors());
 const port = 8000;
 app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
 
+
+app.get('/', (req, res) => {
+    res.json({message: 'Hello World!'});
+});
+
 const now = () => new Date().toISOString();
 const true_if_within_4000_characters_and_not_empty = (str) => str.length > 2 && str.length <= 4000 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
 const true_if_within_10_characters_and_not_empty = (str) => str.length > 2 && str.length <= 10 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
