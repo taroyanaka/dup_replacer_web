@@ -102,6 +102,9 @@ grid-template-areas:
 <div class="web_data_parent">
 
 
+    <button @click="switch_test_mode_or_product_mode">switch_test_mode_or_product_mode</button>
+    <button @click="fetch_hello_world">fetch_hello_world</button>
+    <span>NOW Im in: {{ this.test_mode_or_product_mode }}</span>
 
     <input type="text" v-model="name" class="name" placeholder="name">
     <input type="text" v-model="password" class="password" placeholder="password">
@@ -212,6 +215,12 @@ return {
 
     comment: '',
     likes_count_asc_or_desc: 'desc',
+
+    test_mode_domain_and_port: 'http://localhost:8000',
+    product_mode_domain_and_port: 'https://night-cherry-liquid.glitch.me',
+    test_mode_or_product_mode: 'test_mode',
+    // test_mode_or_product_mode: 'product_mode',
+
 }
 },
 watch: {
@@ -369,8 +378,20 @@ a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics
     }
     copyToClipboard()
 },
+
+// test_mode_domain_and_port: this.test_mode_or_product_mode + '',
+// product_mode_domain_and_port: 'https://night-cherry-liquid.glitch.me',
+// test_mode_or_product_mode: 'test_mode',
+get_domain_and_port_of_test_mode_or_product_mode(){
+    return this.test_mode_or_product_mode === 'test_mode' ? this.test_mode_domain_and_port : this.product_mode_domain_and_port;
+},
+switch_test_mode_or_product_mode(){
+    this.test_mode_or_product_mode = this.test_mode_or_product_mode === 'test_mode' ? 'product_mode' : 'test_mode';
+},
+
+
 async fetch_insert_dup(){
-    const res = await fetch('http://localhost:8000/insert_dup', {method: 'POST',headers: {'Content-Type': 'application/json',},body: JSON.stringify({
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/insert_dup', {method: 'POST',headers: {'Content-Type': 'application/json',},body: JSON.stringify({
             name: this.name,
             password: this.password,
             B_C_list: this.B_C_list,
@@ -385,15 +406,15 @@ async fetch_read_dups_parent(){
         'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
         'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
     const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
-    const res = await fetch('http://localhost:8000/read_dups_parent2'
-    // const res = await fetch('http://localhost:8000/read_dups_parent3'
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_dups_parent2'
+    // const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_dups_parent3'
         + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
             , {method: 'GET',headers: {'Content-Type': 'application/json',},});
     const data = await res.json(); console.log(data);
     this.response_message = data;
 },
 async fetch_delete_all_dups_and_dups_parent(){
-    const res = await fetch('http://localhost:8000/delete_all_dups_and_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_all_dups_and_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -415,7 +436,7 @@ async fetched_data_localforage(INDEX){
     await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
 },
 async fetch_like_dups_parent(DUPS_PARENT_ID){
-    const res = await fetch('http://localhost:8000/like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -426,7 +447,7 @@ async fetch_like_dups_parent(DUPS_PARENT_ID){
     await this.fetch_read_dups_parent();
 },
 async fetch_delete_like_dups_parent(DUPS_PARENT_ID){
-    const res = await fetch('http://localhost:8000/delete_like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -437,7 +458,7 @@ async fetch_delete_like_dups_parent(DUPS_PARENT_ID){
     await this.fetch_read_dups_parent();
 },
 async fetch_add_tag(DUPS_PARENT_ID){
-    const res = await fetch('http://localhost:8000/add_tag', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/add_tag', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -449,7 +470,7 @@ async fetch_add_tag(DUPS_PARENT_ID){
     await this.fetch_read_dups_parent();
 },
 async fetch_read_all_tags(){
-    const res = await fetch('http://localhost:8000/read_all_tags', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_all_tags', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -460,7 +481,7 @@ async fetch_read_all_tags(){
 },
 async fetch_search_tag(){ // search_tagはauto_complete_tagsとauto_complete_tags_cunrrent_tagを更新する
     this.auto_complete_tags = [];
-    const res = await fetch('http://localhost:8000/get_tags_for_autocomplete', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/get_tags_for_autocomplete', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -472,7 +493,7 @@ async fetch_search_tag(){ // search_tagはauto_complete_tagsとauto_complete_tag
     this.auto_complete_tags = get_tags_ary(data.tags);
 },
 async fetch_add_comment(DUPS_PARENT_ID){
-    const res = await fetch('http://localhost:8000/add_comment', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/add_comment', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -485,7 +506,7 @@ async fetch_add_comment(DUPS_PARENT_ID){
     await this.fetch_read_dups_parent();
 },
 async fetch_delete_comment(COMMENT_ID){
-    const res = await fetch('http://localhost:8000/delete_comment', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_comment', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -496,7 +517,7 @@ async fetch_delete_comment(COMMENT_ID){
     await this.fetch_read_dups_parent();
 },
 async fetch_add_comment_reply(COMMENT_ID){
-    const res = await fetch('http://localhost:8000/add_comment_reply', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/add_comment_reply', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -508,7 +529,7 @@ async fetch_add_comment_reply(COMMENT_ID){
     await this.fetch_read_dups_parent();
 },
 async fetch_delete_comment_reply(COMMENT_REPLY_ID){
-    const res = await fetch('http://localhost:8000/delete_comment_reply', {method: 'POST',headers: {'Content-Type': 'application/json',},
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_comment_reply', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
             name: this.name,
             password: this.password,
@@ -527,7 +548,7 @@ async change_likes_count_asc_or_desc(){
         'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
         'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
     const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
-    const res = await fetch('http://localhost:8000/read_dups_parent'
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_dups_parent'
         + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
             , {method: 'GET',headers: {'Content-Type': 'application/json',},});
     const data = await res.json(); console.log(data);
@@ -559,6 +580,14 @@ make_dups_content_object(DUPS){
     res = R.zip(data.dups_content_group_id, data.dups_content_1, data.dups_content_2, data.dups_content_3);
     console.log(res);
     return data;
+},
+
+async fetch_hello_world(){
+    const res = await fetch(
+        this.get_domain_and_port_of_test_mode_or_product_mode()
+    );
+    const data = await res.json(); console.log(data);
+    // await this.fetch_read_dups_parent();
 },
 
 

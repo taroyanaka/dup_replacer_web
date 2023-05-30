@@ -1,3 +1,4 @@
+
 // -- sqlite3で全てのテーブルとそのデータを削除するクエリ
 // DROP TABLE IF EXISTS user_permission;
 // DROP TABLE IF EXISTS users;
@@ -135,10 +136,9 @@ const cors = require('cors');
 app.use(cors());
 const port = 8000;
 app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
-
-
+// app.listen(port, () => console.log(`App listening!! at http://localhost:${port}`) );
 app.get('/', (req, res) => {
-    res.json({message: 'Hello World!'});
+    res.json({message: 'Hello World, this is TEST mode!!!!'});
 });
 
 const now = () => new Date().toISOString();
