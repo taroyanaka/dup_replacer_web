@@ -548,3 +548,23 @@ app.post('/delete_comment_reply', (req, res) => {
     error_response(res, 'ERROR: ' + error);
     }
 });
+
+function limitDataSize(data) {
+  const MAX_SIZE = 100000; // 100kb
+  const serializedData = JSON.stringify(data);
+  if (serializedData.length <= MAX_SIZE) {
+    return data;
+  }
+  const reducedData = JSON.parse(serializedData, (key, value) => {
+    if (typeof value === 'string' && value.length > 100) {
+      return value.slice(0, 100);
+    }
+    return value;
+  });
+  const reducedSize = JSON.stringify(reducedData).length;
+  if (reducedSize > MAX_SIZE) {
+    throw new Error('データサイズが100kbを超えました');
+  }
+  return reducedData;
+}
+

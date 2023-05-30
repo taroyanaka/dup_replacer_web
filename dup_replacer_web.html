@@ -592,5 +592,35 @@ async fetch_hello_world(){
 
 
 }}).mount('.app');
+
+
+function limitDataSize(data) {
+  const MAX_SIZE = 100000; // 100kb
+//   const MAX_SIZE = 10; // 10b
+  const serializedData = JSON.stringify(data);
+  if (serializedData.length <= MAX_SIZE) {
+    return data;
+  }
+  const reducedData = JSON.parse(serializedData, (key, value) => {
+    if (typeof value === 'string' && value.length > 100) {
+      return value.slice(0, 100);
+    }
+    return value;
+  });
+  const reducedSize = JSON.stringify(reducedData).length;
+  if (reducedSize > MAX_SIZE) {
+    throw new Error('データサイズが100kbを超えました');
+  }
+  return reducedData;
+}
+
+const userData = {
+  name: 'John Doe',
+  age: 30,
+  address: '123 Main St, Anytown USA',
+  hobbies: ['reading', 'writing', 'coding', 'hiking', 'traveling'],
+  bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, velit vel bibendum bibendum, quam sapien bibendum sapi'
+};
+
 </script>
 </html>
