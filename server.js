@@ -127,7 +127,7 @@
 const R = require('ramda');
 const express = require('express');
 const sqlite = require('better-sqlite3');
-const db = new sqlite('./dup.sqlite3');
+const db = new sqlite('./.data/dup.sqlite3');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
