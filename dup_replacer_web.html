@@ -163,6 +163,7 @@ grid-template-areas:
             <li v-for="(reply, index) in comment['comment_replies']" :key="index">
                 <h4>Reply {{ index + 1 }}</h4>
                 <p>Reply: {{ reply }}</p>
+                <button @click="fetch_delete_comment_reply(reply['comment_reply_id'])">fetch_delete_comment_reply</button>
             </li>
             </ul>
         </li>
