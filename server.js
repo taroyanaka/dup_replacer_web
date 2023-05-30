@@ -568,7 +568,7 @@ function limitDataSize(data) {
 }
 
 // SQLで一人のユーザーが保持できるデータ量を100kb以下に抑える関数をlimitDataSizeと組み合わせて作る
-// 一人のユーザーのデータ量というのはそのユーザーが投稿したdupsやコメントや返信のデータ量の合計のこと
+// 一人のユーザーのデータ量というのはそのユーザーが投稿したdupsやlikeやtagやコメントや返信のデータ量の合計のこと
 function check_user_data_size(user_id) {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(user_id);
     const dups = db.prepare('SELECT * FROM dups WHERE user_id = ?').all(user_id);
