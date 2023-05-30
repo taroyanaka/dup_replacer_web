@@ -1,4 +1,3 @@
-
 // -- sqlite3で全てのテーブルとそのデータを削除するクエリ
 // DROP TABLE IF EXISTS user_permission;
 // DROP TABLE IF EXISTS users;
@@ -568,3 +567,23 @@ function limitDataSize(data) {
   return reducedData;
 }
 
+// SQLで一人のユーザーが保持できるデータ量を100kb以下に抑える関数をlimitDataSizeと組み合わせて作る
+// 一人のユーザーのデータ量というのはそのユーザーが投稿したdupsやコメントや返信のデータ量の合計のこと
+function check_user_data_size(user_id) {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(user_id);
+    const dups = db.prepare('SELECT * FROM dups WHERE user_id = ?').all(user_id);
+    const comments = db.prepare('SELECT * FROM comments WHERE user_id = ?').all(user_id);
+    const comment_replies = db.prepare('SELECT * FROM comment_replies WHERE user_id = ?').all(user_id);
+    const likes = db.prepare('SELECT * FROM likes WHERE user_id = ?').all(user_id);
+    const tags = db.prepare('SELECT * FROM tags WHERE user_id = ?').all(user_id);
+    const user_data = {
+        user: user,
+        dups: dups,
+        comments: comments,
+        comment_replies: comment_replies,
+        likes: likes,
+        tags: tags
+    };
+    const limited_user_data = limitDataSize(user_data);
+    return limited_user_data;
+}
