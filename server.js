@@ -166,8 +166,14 @@ WHERE users.username = ? AND users.userpassword = ?
 // 原因不明のエラーの場合は適当なエラーレスポンスを返す
 app.get('/read_dups_parent2', (req, res) => {
   try {
-    const likes_ORDER_BY_ASC_OR_DESC = req.query.ORDER_BY_ASC_OR_DESC === 'ASC' ? 'ASC' : 'DESC';
-    const likes_count = db.prepare('SELECT COUNT(id) AS likes_count FROM likes WHERE dups_parent_id = ?').get(req.query.dups_parent_id).likes_count;
+    const get_order_by_from_req_query = (REQ) => {
+        switch (`${REQ.query.ORDER_BY}:${REQ.query.ASC_OR_DESC}`) {
+            case 'likes_count:ASC': return 'likes_count ASC';
+            case 'likes_count:DESC': return 'likes_count DESC';
+            default: return 'dups_parent.id DESC';
+        }
+    }
+
     const dups_parent = db.prepare(`
       SELECT
         dups_parent.id AS dups_parent_id,
@@ -185,6 +191,7 @@ app.get('/read_dups_parent2', (req, res) => {
       LEFT JOIN comment_replies ON comments.id = comment_replies.comment_id
       LEFT JOIN likes ON likes.dups_parent_id = dups_parent.id
       GROUP BY dups_parent.id
+      ORDER BY ${get_order_by_from_req_query(req)}
     `).all();
 
     const result = dups_parent.map(parent => {
