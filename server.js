@@ -548,23 +548,13 @@ app.post('/delete_comment_reply', (req, res) => {
     }
 });
 
-function limitDataSize(data) {
-  const MAX_SIZE = 100000; // 100kb
+function limitDataSize(data, MAX_BYTE_SIZE) {
   const serializedData = JSON.stringify(data);
-  if (serializedData.length <= MAX_SIZE) {
+  if (serializedData.length <= MAX_BYTE_SIZE) {
     return data;
   }
-  const reducedData = JSON.parse(serializedData, (key, value) => {
-    if (typeof value === 'string' && value.length > 100) {
-      return value.slice(0, 100);
-    }
-    return value;
-  });
-  const reducedSize = JSON.stringify(reducedData).length;
-  if (reducedSize > MAX_SIZE) {
-    throw new Error('データサイズが100kbを超えました');
-  }
-  return reducedData;
+  const change_kb_mb_gb = (BYTE_SIZE) => MAX_BYTE_SIZE / 1000 / 1000 / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 / 1000 / 1000 + 'GB' : MAX_BYTE_SIZE / 1000 / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 / 1000 + 'MB' : MAX_BYTE_SIZE / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 + 'KB' : MAX_BYTE_SIZE + 'B';
+  throw new Error('データサイズが上限を超えました: '+ change_kb_mb_gb(MAX_BYTE_SIZE));
 }
 
 // SQLで一人のユーザーが保持できるデータ量を100kb以下に抑える関数をlimitDataSizeと組み合わせて作る
