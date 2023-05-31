@@ -167,6 +167,7 @@ WHERE users.username = ? AND users.userpassword = ?
 app.get('/read_dups_parent2', (req, res) => {
   try {
     const likes_ORDER_BY_ASC_OR_DESC = req.query.ORDER_BY_ASC_OR_DESC === 'ASC' ? 'ASC' : 'DESC';
+    const likes_count = db.prepare('SELECT COUNT(id) AS likes_count FROM likes WHERE dups_parent_id = ?').get(req.query.dups_parent_id).likes_count;
     const dups_parent = db.prepare(`
       SELECT
         dups_parent.id AS dups_parent_id,
@@ -174,7 +175,7 @@ app.get('/read_dups_parent2', (req, res) => {
         dups_parent.updated_at AS dups_parent_updated_at,
         users.username AS user_name,
         GROUP_CONCAT(DISTINCT dups.content_group_id) AS dups_content_group_id,
-        COUNT(likes.dups_parent_id) AS likes_count
+        (SELECT COUNT(id) AS likes_count FROM likes WHERE dups_parent_id = dups_parent.id) AS likes_count
       FROM dups_parent
       LEFT JOIN users ON dups_parent.user_id = users.id
       LEFT JOIN dups ON dups_parent.id = dups.dups_parent_id

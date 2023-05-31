@@ -135,7 +135,11 @@ grid-template-areas:
     <p>User name: {{ data.user_name }}</p>
     <!-- <p>content_group_id: {{ data.content_group_id }}</p> -->
     <p>Dups content group ID: {{ data.dups_content_group_id }}</p>
-    <p>Likes count: {{ data.likes_count }}</p>
+    <p style="margin-left: 4rem;">Likes count: {{ data.likes_count }}</p>
+    <button @click="fetch_like_dups_parent(data.dups_parent_id)" style="margin-left: 4rem;">fetch_like_dups_parent</button>
+    <button @click="fetch_delete_like_dups_parent(data.dups_parent_id)" style="margin-left: 4rem;">fetch_delete_like_dups_parent</button>
+<!-- fetch_add_tag(DUPS_PARENT_ID){ -->
+<!-- fetch_read_all_tags(){ -->
 
     <!-- <div v-for="(parent, index) in data" :key="index"> -->
         <!-- content_group_id: {{ parent.dups_content_group_id }} -->
@@ -276,6 +280,14 @@ switch_user(){
     default: break;
     }
 },
+// switch_user(){
+//     switch (`${this.name}:${this.password}`) {
+//     case 'user1:user_pass1': this.name = 'user2'; this.password = 'user_pass2'; break;
+//     case 'user2:user_pass2': this.name = 'GUEST'; this.password = 'GUEST_PASS'; break;
+//     case 'GUEST:GUEST_PASS': this.name = 'user1'; this.password = 'user_pass1'; break;
+//     default: break;
+//     }
+// },
 refresh_save_data() {
     this.save_data = [
         this.B_C_list,
@@ -555,32 +567,6 @@ async change_likes_count_asc_or_desc(){
     this.response_message = data;
 },
 
-server_data_edit_for_client_data(){
-    return this.to_ary(this.response_message)
-},
-make_comment_object(COMMENT){
-    return {
-        comment_id: COMMENT.comment_id.split(','),
-        comment: COMMENT.comment.split(','),
-        // created_at: COMMENT.created_at.split(','),
-        // updated_at: COMMENT.updated_at.split(','),
-        // user_name: COMMENT.user_name.split(','),
-        // user_id: COMMENT.user_id.split(','),
-    };  
-},
-make_dups_content_object(DUPS){
-    const data = {
-        dups_content_group_id: DUPS.dups_content_group_id.split(','),
-        dups_content_1: DUPS.dups_content_1.split(','),
-        dups_content_2: DUPS.dups_content_2.split(','),
-        dups_content_3: DUPS.dups_content_3.split(','),
-        dups_content_4: DUPS.dups_content_4.split(','),
-    };
-    // dataをR.zipする
-    res = R.zip(data.dups_content_group_id, data.dups_content_1, data.dups_content_2, data.dups_content_3);
-    console.log(res);
-    return data;
-},
 
 async fetch_hello_world(){
     const res = await fetch(
@@ -594,33 +580,15 @@ async fetch_hello_world(){
 }}).mount('.app');
 
 
-function limitDataSize(data) {
-  const MAX_SIZE = 100000; // 100kb
-//   const MAX_SIZE = 10; // 10b
+function limitDataSize(data, MAX_BYTE_SIZE) {
   const serializedData = JSON.stringify(data);
-  if (serializedData.length <= MAX_SIZE) {
+  if (serializedData.length <= MAX_BYTE_SIZE) {
     return data;
   }
-  const reducedData = JSON.parse(serializedData, (key, value) => {
-    if (typeof value === 'string' && value.length > 100) {
-      return value.slice(0, 100);
-    }
-    return value;
-  });
-  const reducedSize = JSON.stringify(reducedData).length;
-  if (reducedSize > MAX_SIZE) {
-    throw new Error('データサイズが100kbを超えました');
-  }
-  return reducedData;
-}
-
-const userData = {
-  name: 'John Doe',
-  age: 30,
-  address: '123 Main St, Anytown USA',
-  hobbies: ['reading', 'writing', 'coding', 'hiking', 'traveling'],
-  bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, velit vel bibendum bibendum, quam sapien bibendum sapi'
+  const change_kb_mb_gb = (BYTE_SIZE) => MAX_BYTE_SIZE / 1000 / 1000 / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 / 1000 / 1000 + 'GB' : MAX_BYTE_SIZE / 1000 / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 / 1000 + 'MB' : MAX_BYTE_SIZE / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 + 'KB' : MAX_BYTE_SIZE + 'B';
+  throw new Error('データサイズが上限を超えました: '+ change_kb_mb_gb(MAX_BYTE_SIZE));
 };
+
 
 </script>
 </html>
