@@ -25,6 +25,7 @@ CREATE TABLE user_permission (
   deletable INTEGER NOT NULL, 
   likable INTEGER NOT NULL,
   commentable INTEGER NOT NULL,
+  data_limit INTEGER NOT NULL,
 
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL
@@ -110,30 +111,42 @@ CREATE TABLE comment_replies (
 
 
 
--- user_permissionにデータを2レコード挿入する
+-- user_permissionにレコード挿入する
 INSERT INTO user_permission (id, permission,
 readable,
 writable,
 deletable,
 likable,
 commentable,
-created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, 0, 0, DATETIME('now'), DATETIME('now'));
+data_limit,
+created_at, updated_at) VALUES (1, 'guest', 1, 0, 0, 0, 0,
+200,
+DATETIME('now'), DATETIME('now'));
 INSERT INTO user_permission (id, permission,
 readable,
 writable,
 deletable,
 likable,
 commentable,
-created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, 1, DATETIME('now'), DATETIME('now'));
+data_limit,
+created_at, updated_at) VALUES (2, 'user', 1, 1, 1, 1, 1,
+40000,
+DATETIME('now'), DATETIME('now'));
+
+INSERT INTO user_permission (id, permission,
+readable,
+writable,
+deletable,
+likable,
+commentable,
+data_limit,
+created_at, updated_at) VALUES (3, 'pro', 1, 1, 1, 1, 1,
+400000,
+DATETIME('now'), DATETIME('now'));
 
 
--- usersにデータを3レコード挿入する
+-- usersにデータをレコード挿入する
 INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));
 INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'name1', 'password1', DATETIME('now'), DATETIME('now'));
 INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'name2', 'password2', DATETIME('now'), DATETIME('now'));
-
--- likesにデータを3レコード挿入する
--- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));
--- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 2, DATETIME('now'), DATETIME('now'));
--- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 3, DATETIME('now'), DATETIME('now'));
 

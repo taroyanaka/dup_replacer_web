@@ -137,7 +137,9 @@ const port = 8000;
 app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
 // app.listen(port, () => console.log(`App listening!! at http://localhost:${port}`) );
 app.get('/', (req, res) => {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(1);
     console.log('Hello World, this is the TEST mode!!!!');
+    console.log(JSON.stringify(user).length);
     res.json({message: 'Hello World, this is the TEST mode!!!!'});
 });
 
@@ -579,5 +581,7 @@ function check_user_data_size(user_id) {
     return limited_user_data;
 }
 
+// On Glitch, projects that are created for free are limited to 200MB of disk space.
+// Boosted apps can use up to 400MB of disk space.
 // 400mbを40kbで割ると10000になるので、一人のユーザーが40kb保持できるとすると、ユーザー数は10000人までとなる
 // 400mbを400kbで割ると1000になるので、一人のユーザーが400kb保持できるとすると、ユーザー数は1000人までとなる
