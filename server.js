@@ -137,7 +137,8 @@ const port = 8000;
 app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
 // app.listen(port, () => console.log(`App listening!! at http://localhost:${port}`) );
 app.get('/', (req, res) => {
-    res.json({message: 'Hello World, this is TEST mode!!!!'});
+    console.log('Hello World, this is the TEST mode!!!!');
+    res.json({message: 'Hello World, this is the TEST mode!!!!'});
 });
 
 const now = () => new Date().toISOString();
@@ -577,3 +578,6 @@ function check_user_data_size(user_id) {
     const limited_user_data = limitDataSize(user_data);
     return limited_user_data;
 }
+
+// 400mbを40kbで割ると10000になるので、一人のユーザーが40kb保持できるとすると、ユーザー数は10000人までとなる
+// 400mbを400kbで割ると1000になるので、一人のユーザーが400kb保持できるとすると、ユーザー数は1000人までとなる

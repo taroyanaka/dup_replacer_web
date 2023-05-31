@@ -9,6 +9,10 @@ DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS comment_replies;
 
+
+-- ja: データ制限量
+-- en: Data limit
+
 -- ユーザーの権限のテーブル。カラムはIDはと名前と作成日と更新日を持つ。IDは自動的に増加する
 -- カラムの中には、一般ユーザー、ゲストユーザーがある
 -- ゲストユーザーはreadだけできる。一般ユーザーはread,write,deleteができる
