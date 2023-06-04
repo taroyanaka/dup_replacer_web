@@ -248,6 +248,7 @@ app.get('/read_dups_parent2', (req, res) => {
             return {
                 ...comment,
                 comment_replies,
+                tags,
             }
         });
 
@@ -373,10 +374,10 @@ app.post('/delete_like_dups_parent', (req, res) => {
 });
 
 app.post('/add_tag', (req, res) => {
-    console.log(
-        req.body.tag,
-        req.body.tag.length
-    )
+    // console.log(
+    //     req.body.tag,
+    //     req.body.tag.length
+    // )
     try {
     // true_if_within_10_characters_and_not_empty(req.body.tag) ? null : (()=>{throw new Error('1文字以上10文字以内で入力してください')})();
     true_if_within_10_characters_and_not_empty_and_not_include_symbol(req.body.tag) ? null : (()=>{throw new Error('1文字以上10文字以内で入力してください')})();

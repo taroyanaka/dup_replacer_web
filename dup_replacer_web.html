@@ -129,6 +129,9 @@ grid-template-areas:
 <template v-for="(data, index) in response_message">
 <div>
     <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
+
+    <span>tag: </span><button v-for="TAGS in data.tags">{{ TAGS.tag }}</button>
+
     <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
     <!-- <input type="text" v-model="tag" class="tag" placeholder="tag" /> -->
     <button @click="fetch_add_tag(data.dups_parent_id)">fetch_add_tag</button>
