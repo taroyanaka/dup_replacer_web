@@ -146,6 +146,9 @@ app.get('/', (req, res) => {
 const now = () => new Date().toISOString();
 const true_if_within_4000_characters_and_not_empty = (str) => str.length > 2 && str.length <= 4000 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
 const true_if_within_10_characters_and_not_empty = (str) => str.length > 2 && str.length <= 10 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
+// validationの関数。falsyでは無い1文字以上10文字以下で記号を含まない場合はtrue、そうではない場合はfalse
+const true_if_within_10_characters_and_not_empty_and_not_include_symbol = (str) => str.length > 2 && str.length <= 10 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false && !str.match(/[^A-Za-z0-9]/) ? true : false;
+
 // expressの一般的なエラーのレスポンス。引数としてエラー文字列を含めて呼び出す
 const error_response = (res, error_message) => res.json({error: error_message});
 const get_user_with_permission = (REQ) => db.prepare(`
@@ -370,6 +373,10 @@ app.post('/delete_like_dups_parent', (req, res) => {
 });
 
 app.post('/add_tag', (req, res) => {
+    console.log(
+        req.body.tag,
+        req.body.tag.length
+    )
     try {
     true_if_within_10_characters_and_not_empty(req.body.tag) ? null : (()=>{throw new Error('10文字以内で入力してください')})();
     const user_with_permission = get_user_with_permission(req);
@@ -593,3 +600,4 @@ function check_user_data_size(user_id) {
 // Boosted apps can use up to 400MB of disk space.
 // 400mbを40kbで割ると10000になるので、一人のユーザーが40kb保持できるとすると、ユーザー数は10000人までとなる
 // 400mbを400kbで割ると1000になるので、一人のユーザーが400kb保持できるとすると、ユーザー数は1000人までとなる
+ 

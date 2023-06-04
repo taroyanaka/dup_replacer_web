@@ -130,7 +130,7 @@ grid-template-areas:
 <div>
     <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
     <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
-    <input type="text" v-model="tag" class="tag" placeholder="tag" />
+    <!-- <input type="text" v-model="tag" class="tag" placeholder="tag" /> -->
     <button @click="fetch_add_tag(data.dups_parent_id)">fetch_add_tag</button>
     <p>Created at: {{ data.dups_parent_created_at }}</p>
     <p>Updated at: {{ data.dups_parent_updated_at }}</p>
@@ -476,7 +476,8 @@ async fetch_add_tag(DUPS_PARENT_ID){
         body: JSON.stringify({
             name: this.name,
             password: this.password,
-            tag: this.tag,
+            // tag: this.tag,
+            tag: this.auto_complete_tags_cunrrent_tag,
             dups_parent_id: DUPS_PARENT_ID,
         }),
     });
