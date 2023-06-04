@@ -114,7 +114,6 @@ grid-template-areas:
     <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
 
     <div>
-    <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
     <datalist id="autocomplete-list">
         <option v-for="item in auto_complete_tags" :key="item" :value="item"></option>
     </datalist>
@@ -130,6 +129,9 @@ grid-template-areas:
 <template v-for="(data, index) in response_message">
 <div>
     <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
+    <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
+    <input type="text" v-model="tag" class="tag" placeholder="tag" />
+    <button @click="fetch_add_tag(data.dups_parent_id)">fetch_add_tag</button>
     <p>Created at: {{ data.dups_parent_created_at }}</p>
     <p>Updated at: {{ data.dups_parent_updated_at }}</p>
     <p>User name: {{ data.user_name }}</p>
@@ -211,7 +213,7 @@ return {
     name: 'name1',
     password: 'password1',
     response_message: '',
-    tag: 'tag1',
+    tag: '',
     all_tags: [],
     // auto_complete_tag
     auto_complete_tags: [],
