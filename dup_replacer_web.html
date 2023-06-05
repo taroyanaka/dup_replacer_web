@@ -417,19 +417,30 @@ async fetch_insert_dup(){
     const data = await res.json(); console.log(data);
     await fetch_read_dups_parent();
 },
-async fetch_read_dups_parent(){
-    let ADDITIONAL_PARAMETER = '';
-    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
-        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
-        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
-    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
-    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_dups_parent2'
-    // const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_dups_parent3'
-        + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
+async fetch_read_dups_parent(ALL_ADDITIONAL_PARAMETER){
+    ALL_ADDITIONAL_PARAMETER = ALL_ADDITIONAL_PARAMETER === undefined ? '' : ALL_ADDITIONAL_PARAMETER;
+    console.log(ALL_ADDITIONAL_PARAMETER);
+    const res = await fetch(
+        this.get_domain_and_port_of_test_mode_or_product_mode()
+        + '/read_dups_parent2'
+        + ALL_ADDITIONAL_PARAMETER
             , {method: 'GET',headers: {'Content-Type': 'application/json',},});
     const data = await res.json(); console.log(data);
     this.response_message = data;
 },
+
+async change_likes_count_asc_or_desc(){
+    this.likes_count_asc_or_desc = this.likes_count_asc_or_desc === 'ASC' ? 'DESC' : 'ASC';
+    let ADDITIONAL_PARAMETER = '';
+    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
+        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
+        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
+    console.log(ADDITIONAL_PARAMETER);
+    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
+    const ALL_ADDITIONAL_PARAMETER = if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER;
+    await this.fetch_read_dups_parent(ALL_ADDITIONAL_PARAMETER);
+},
+
 async fetch_delete_all_dups_and_dups_parent(){
     const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_all_dups_and_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
         body: JSON.stringify({
@@ -558,20 +569,6 @@ async fetch_delete_comment_reply(COMMENT_REPLY_ID){
     await this.fetch_read_dups_parent();
 },
 
-async change_likes_count_asc_or_desc(){
-    this.likes_count_asc_or_desc = this.likes_count_asc_or_desc === 'ASC' ? 'DESC' : 'ASC';
-    // await fetch_read_dups_parent();
-    let ADDITIONAL_PARAMETER = '';
-    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
-        'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
-        'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
-    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
-    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_dups_parent'
-        + if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER
-            , {method: 'GET',headers: {'Content-Type': 'application/json',},});
-    const data = await res.json(); console.log(data);
-    this.response_message = data;
-},
 
 
 async fetch_hello_world(){
