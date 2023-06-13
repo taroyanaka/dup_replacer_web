@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dup_replacer</title>
+    <!-- 
+        localforage無しの設計に変更する!!!!!!!!!!!!!!!!
+        手に余る!!!!!!!!ムリ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     -->
+<script src="./lib/vue@3.2.36.global.prod.js"></script>
+<script src="./lib/localforage@1.10.0.js"></script>
+<script src="./lib/ramda.@0.28.0.js"></script>
+<link rel="stylesheet" href="./lib/reset.css">
+<style>
+/* for positioning */
+.app {
+display: grid;
+grid-gap: 0px;
+grid-template-areas:
+    "button_parent button_parent"
+    "textarea_parent textarea_parent"
+    "list_parent web_data_parent"
+    ;
+    width: 100vw;
+}
+.button_parent{
+    grid-area: button_parent;
+    display: grid;
+    grid-gap: 0px;
+}
+.textarea_parent{
+    grid-area: textarea_parent;
+    width: 100vw;
+}
+.list_parent{
+    grid-area: list_parent;
+    width: 50vw;
+}
+.web_data_parent{
+    grid-area: web_data_parent;
+    width: 50vw;
+}
+.textarea_childs{
+    display: grid;
+    grid-template-areas:
+    'a b d'
+    'a c d';
+}
+.a{grid-area: a;}
+.b{grid-area: b;}
+.c{grid-area: c;}
+.d{grid-area: d;}
+
+
+/* for styling */
+.textarea_parent{
+    background-color: blueviolet;
+}
+.accent_color_1{
+    background-color: greenyellow;
+}
+.accent_color_2{
+    background-color: yellow;
+}
+.accent_color_3{
+    background-color: orange;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="button_parent">
+    <input type="button" value="save_data_to_all_save" @click="save_data_to_all_save">
+    <input type="checkbox" id="check" v-model="in_reference_to_INDEX_0_apply_check">
+</div>
+
+<div class="textarea_parent">
+    <div v-for="(DATA, INDEX) in B_C_list" class="textarea_childs">
+        <textarea name="a" class="a" v-model="DATA[0]" @input="exe"></textarea>
+        <textarea name="b" class="b" v-model="DATA[1]" @input="exe"></textarea>
+        <textarea name="c" class="c" v-model="DATA[2]" @input="exe"></textarea>
+        <textarea name="d" class="d" v-model="DATA[3]" @input="exe"></textarea>
+    </div>
+    <button @click="duplicate_button">duplicate_button</button>
+    <textarea ref="all_result_textarea" placeholder="all_result is here">{{ all_result }}</textarea>
+    <button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
+</div>
+
+<!-- sort_by_when
+sort_by_rating
+save_data_set
+rating_up
+rating_down
+save_data_delete
+
+filter_by_text
+filter_text
+
+all_save -->
+<div class="list_parent">
+    <div><input type="button" value="sort_by_when" @click="sort_by_when"></div>
+    <div><input type="button" value="sort_by_rating" @click="sort_by_rating"></div>
+    <div><input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text"></div>
+    <ul>
+        <li v-for="(item, index) in all_save">
+        <button @click="save_data_set(index)">save_data_set</button>
+        {{ item[2] }}: rating {{ item[1] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+        <p>{{ item[0] }}</p>
+        <button @click="save_data_delete(index)">save_data_delete</button>
+        </li>
+    </ul>
+</div>
+
+<div class="web_data_parent">
+
+
+    <button @click="switch_test_mode_or_product_mode">switch_test_mode_or_product_mode</button>
+    <button @click="fetch_hello_world">fetch_hello_world</button>
+    <span>NOW Im in: {{ this.test_mode_or_product_mode }}</span>
+
+    <input type="text" v-model="name" class="name" placeholder="name">
+    <input type="text" v-model="password" class="password" placeholder="password">
+    <button @click="switch_user">switch_user</button>
+
+    <button @click="fetch_insert_dup">fetch_insert_dup</button>
+    <button @click="fetch_delete_all_dups_and_dups_parent">fetch_delete_all_dups_and_dups_parent</button>
+
+    <div>
+    <datalist id="autocomplete-list">
+        <option v-for="item in auto_complete_tags" :key="item" :value="item"></option>
+    </datalist>
+    </div>
+
+    <ul>
+        <li v-for="(TAG, TAG_INDEX) in all_tags">{{ TAG }}</li>
+    </ul>
+
+    <button @click="handling_get_param">{{ likes_count_asc_or_desc === 'ASC' ? '▲' : '▼' }}: handling_get_param</button>
+
+
+<template v-for="(data, index) in response_message">
+<div>
+    <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
+    <!-- fetched_data_localforage -->
+    <button @click="fetched_data_localforage(data.dups_parent_id)">fetched_data_localforage</button>
+
+    <span>tag: </span><button v-for="TAGS in data.tags">{{ TAGS.tag }}</button>
+
+    <input type="text" v-model="auto_complete_tags_cunrrent_tag" @input="search_tag" class="search_tag" placeholder="search_tag"  list="autocomplete-list" />
+    <!-- <input type="text" v-model="tag" class="tag" placeholder="tag" /> -->
+    <button @click="fetch_add_tag(data.dups_parent_id)">fetch_add_tag</button>
+    <p>Created at: {{ data.dups_parent_created_at }}</p>
+    <p>Updated at: {{ data.dups_parent_updated_at }}</p>
+    <p>User name: {{ data.user_name }}</p>
+    <!-- <p>content_group_id: {{ data.content_group_id }}</p> -->
+    <p>Dups content group ID: {{ data.dups_content_group_id }}</p>
+    <p style="margin-left: 4rem;">Likes count: {{ data.likes_count }}</p>
+    <button @click="fetch_like_dups_parent(data.dups_parent_id)" style="margin-left: 4rem;">fetch_like_dups_parent</button>
+    <button @click="fetch_delete_like_dups_parent(data.dups_parent_id)" style="margin-left: 4rem;">fetch_delete_like_dups_parent</button>
+<!-- fetch_add_tag(DUPS_PARENT_ID){ -->
+<!-- fetch_read_all_tags(){ -->
+
+    <!-- <div v-for="(parent, index) in data" :key="index"> -->
+        <!-- content_group_id: {{ parent.dups_content_group_id }} -->
+    <details data-dropdown>
+        <summary>open_data_save_load</summary>
+      <ul style="margin-left: 2rem;">
+        <li v-for="(dup, index) in data['dups']" :key="index">
+            {{ dup.dups_content_1 }}
+            {{ dup.dups_content_2 }}
+            {{ dup.dups_content_3 }}
+            {{ dup.dups_content_4 }}
+        </li>
+      </ul>
+    </details>
+    
+    <!-- </div> -->
+
+    <ul style="margin-left: 4rem;">
+        <li v-for="(comment, index) in data['comments_and_replies']" :key="index">
+            <!-- <h3>Comment {{ index + 1 }}</h3> -->
+            <!-- <p>Comment ID: {{ comment.comment_id }}</p> -->
+            <p>Comment: {{ comment.comment }}</p>
+            <p>Comment_comment_id: {{ comment.comment_id }}</p>
+            <button @click="fetch_add_comment_reply(comment.comment_id)">fetch_add_comment_reply</button>
+            <input type="text" name="reply" id="reply" v-model="reply" placeholder="reply">
+            <!-- <p>Created at: {{ comment.comment_created_at }}</p> -->
+            <!-- <p>Updated at: {{ comment.comment_updated_at }}</p> -->
+            <!-- <p>User name: {{ comment.comment_user_name }}</p> -->
+            <!-- <p>User ID: {{ comment.comment_user_id }}</p> -->
+            
+            <ul style="margin-left: 2rem;">
+            <li v-for="(reply, index) in comment['comment_replies']" :key="index">
+                <h4>Reply {{ index + 1 }}</h4>
+                <p>Reply: {{ reply }}</p>
+                <button @click="fetch_delete_comment_reply(reply['comment_reply_id'])">fetch_delete_comment_reply</button>
+            </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+</template>
+
+
+
+
+
+</div>
+
+
+
+</div>
+</body>
+<script>
+const app = Vue.createApp({
+data() {
+return {
+    B_C_list:[
+        ['aaBBccDD', 'aa\nEF\nHI', 'XX\nef\nhi', ''],
+    ],
+    content_1: [],
+    content_2: [],
+    content_3: [],
+    rating: 0,
+    when: null,
+    save_data: [],
+    all_save: [],
+    sort_by: 'asc',
+    filter_text: '',
+    temporary_all_save_for_filter: [],
+
+    all_result: '',
+    in_reference_to_INDEX_0_apply_check: true,
+    name: 'name1',
+    password: 'password1',
+    response_message: '',
+    tag: '',
+    // tags: ['taro', 'a'],
+    tags: ['taro'],
+    all_tags: [],
+    // auto_complete_tag
+    auto_complete_tags: [],
+    auto_complete_tags_cunrrent_tag: '',
+
+    comment: '',
+    likes_count_asc_or_desc: 'desc',
+
+    test_mode_domain_and_port: 'http://localhost:8000',
+    product_mode_domain_and_port: 'https://night-cherry-liquid.glitch.me',
+    // test_mode_or_product_mode: 'test_mode',
+    test_mode_or_product_mode: 'product_mode',
+
+}
+},
+watch: {
+//    B_C_list: {
+//      handler() {
+//         this.in_reference_to_INDEX_0_apply();
+//         this.make_result();
+//      },
+//      deep: true
+//    },
+},
+mounted() {
+this.save_data_load();
+this.make_result();
+this.auto_resize();
+
+this.fetch_read_dups_parent();
+this.fetch_read_all_tags();
+},
+beforeUpdated() {
+},
+updated() {
+},
+methods: {
+exe(){
+    this.in_reference_to_INDEX_0_apply();
+    this.make_result();
+},
+// const d = [4, 5, 6];
+// const e = ['d', 'e', 'f'];
+// const f = [7, 8, 9];
+// multi_zip([d, e, f, g]); // [[4, 'd', 7], [5, 'e', 8], [6, 'f', 9]]
+multi_zip(arrays){
+    const length = arrays.reduce((a, b) => Math.min(a, b.length), Infinity);
+    const result = [];
+    for (let i = 0; i < length; i++) {
+        result.push(arrays.map((array) => array[i]));
+    }
+    return result;
+},
+get_zip_reply(COMMENT){
+    return this.multi_zip([
+        COMMENT.comment_reply_id.split(','),
+        COMMENT.comment_reply.split(','),
+        COMMENT.comment_user_name.split(','),
+    ])
+},
+switch_user(){
+    switch (`${this.name}:${this.password}`) {
+    case 'name1:password1': this.name = 'name2'; this.password = 'password2'; break;
+    case 'name2:password2': this.name = 'GUEST'; this.password = 'GUEST_PASS'; break;
+    case 'GUEST:GUEST_PASS': this.name = 'name1'; this.password = 'password1'; break;
+    default: break;
+    }
+},
+// switch_user(){
+//     switch (`${this.name}:${this.password}`) {
+//     case 'user1:user_pass1': this.name = 'user2'; this.password = 'user_pass2'; break;
+//     case 'user2:user_pass2': this.name = 'GUEST'; this.password = 'GUEST_PASS'; break;
+//     case 'GUEST:GUEST_PASS': this.name = 'user1'; this.password = 'user_pass1'; break;
+//     default: break;
+//     }
+// },
+refresh_save_data() {
+    this.save_data = [
+        this.B_C_list,
+        // this.to_ary(this.B_C_list).map(V=>[V[0], V[1], V[2]]),
+        this.rating,
+        this.when,
+    ];
+},
+make_result(){
+    this.when = (new Date()).toLocaleString('en');
+    JSON.parse(JSON.stringify(this.B_C_list)).map((B_C)=>{
+        let tmp = B_C[0];
+        R.zip(
+            B_C[1].split("\n"),
+            B_C[2].split("\n"))
+                .forEach(V=> tmp = tmp.replaceAll(V[0], V[1]) );
+        return tmp;
+    }).forEach((item, index)=>this.B_C_list[index][3] = item);
+    this.all_result = this.B_C_list.map((item)=>item[3]).join("\n");
+},
+async rating_up(INDEX){
+    this.all_save[INDEX][1]++;
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async rating_down(INDEX){
+    this.all_save[INDEX][1]--;
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async save_data_to_all_save(){
+    this.refresh_save_data();
+    this.all_save.push(R.clone(this.save_data));
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async save_data_load() {
+    this.all_save = JSON.parse(await localforage.getItem('dup_replacer_web')) || [];
+    this.temporary_all_save_for_filter = this.all_save;
+},
+save_data_set(index) {
+  [this.B_C_list, this.rating, this.when] = this.all_save[index];
+},
+async save_data_delete(INDEX){
+    if (window.confirm("Do you really want to delete??🦖\n本当に削除する？?🦕")) {
+        this.all_save.splice(INDEX, 1);
+        await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+    }
+},
+sort_by_when() {
+  this.all_save.sort((a, b) => this.sort_by === 'asc' ? new Date(a[2]) - new Date(b[2]) : new Date(b[2]) - new Date(a[2]));
+  this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
+},
+sort_by_rating() {
+  this.all_save.sort((a, b) => this.sort_by === 'asc' ? a[1] - b[1] : b[1] - a[1]);
+  this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
+},
+filter_by_text(){
+    this.all_save = this.temporary_all_save_for_filter.filter(VAL => {
+        return VAL.join("").includes(this.filter_text);
+    });
+    this.filter_text === "" ? this.all_save = this.temporary_all_save_for_filter : null;
+},
+auto_resize(){
+    document.querySelectorAll('textarea').forEach(textarea=>{
+        // textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    });
+},
+duplicate_button(){
+    const copy = R.clone(this.B_C_list[0]);
+    this.B_C_list.push(copy);
+},
+in_reference_to_INDEX_0_apply(){
+    this.in_reference_to_INDEX_0_apply_check === true ? this.B_C_list.forEach((item, index)=>item[0] = this.B_C_list[0][0]) : null;
+},
+to_ary(it){
+    return JSON.parse(JSON.stringify(it));
+},
+a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck() {
+    const copyTextToClipboard = (text) => {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        range.selectNodeContents(textarea);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textarea.setSelectionRange(0, 999999);
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        console.log('Text copied to clipboard');
+    }
+    const copyToClipboard = () => {
+        try {
+            navigator.clipboard ? navigator.clipboard.writeText(this.$refs.all_result_textarea.value).then(() => console.log('Text copied to clipboard')).catch(() => {
+            navigator.userAgent.match(/ipad|iphone/i) ? copyTextToClipboard(this.$refs.all_result_textarea.value) : (this.$refs.all_result_textarea.select() && document.execCommand('copy'));
+            }) : (navigator.userAgent.match(/ipad|iphone/i) ? copyTextToClipboard(this.$refs.all_result_textarea.value) : (this.$refs.all_result_textarea.select() && document.execCommand('copy') && console.log('Text copied to clipboard')));
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    }
+    copyToClipboard()
+},
+
+// test_mode_domain_and_port: this.test_mode_or_product_mode + '',
+// product_mode_domain_and_port: 'https://night-cherry-liquid.glitch.me',
+// test_mode_or_product_mode: 'test_mode',
+get_domain_and_port_of_test_mode_or_product_mode(){
+    return this.test_mode_or_product_mode === 'test_mode' ? this.test_mode_domain_and_port : this.product_mode_domain_and_port;
+},
+switch_test_mode_or_product_mode(){
+    this.test_mode_or_product_mode = this.test_mode_or_product_mode === 'test_mode' ? 'product_mode' : 'test_mode';
+},
+
+
+async fetch_insert_dup(){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/insert_dup', {method: 'POST',headers: {'Content-Type': 'application/json',},body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            B_C_list: this.B_C_list,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await fetch_read_dups_parent();
+},
+async fetch_read_dups_parent(ALL_ADDITIONAL_PARAMETER){
+    ALL_ADDITIONAL_PARAMETER = ALL_ADDITIONAL_PARAMETER === undefined ? '' : ALL_ADDITIONAL_PARAMETER;
+    console.log(ALL_ADDITIONAL_PARAMETER);
+    const res = await fetch(
+        this.get_domain_and_port_of_test_mode_or_product_mode()
+        + '/read_dups_parent2'
+        + ALL_ADDITIONAL_PARAMETER
+            , {method: 'GET',headers: {'Content-Type': 'application/json',},});
+    const data = await res.json(); console.log(data);
+    this.response_message = data;
+},
+
+async handling_get_param(){
+    this.likes_count_asc_or_desc = this.likes_count_asc_or_desc === 'ASC' ? 'DESC' : 'ASC';
+    const tags = this.tags.length === 0 ? '' : this.tags.join(',');
+    console.log(tags);
+    let ADDITIONAL_PARAMETER = '';
+    ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
+        'ORDER_BY=likes_count&ASC_OR_DESC=ASC&TAGS=' + tags:
+        'ORDER_BY=likes_count&ASC_OR_DESC=DESC&TAGS=' + tags;
+    // ADDITIONAL_PARAMETER = this.likes_count_asc_or_desc === 'ASC' ?
+    //     'ORDER_BY=likes_count&ASC_OR_DESC=ASC' : 
+    //     'ORDER_BY=likes_count&ASC_OR_DESC=DESC';
+    console.log(ADDITIONAL_PARAMETER);
+    const if_ADDITIONAL_PARAMETER_then_add_question_mark = () => ADDITIONAL_PARAMETER === '' ? '' : '?';
+    const ALL_ADDITIONAL_PARAMETER = if_ADDITIONAL_PARAMETER_then_add_question_mark() + ADDITIONAL_PARAMETER;
+    await this.fetch_read_dups_parent(ALL_ADDITIONAL_PARAMETER);
+},
+
+async fetch_delete_all_dups_and_dups_parent(){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_all_dups_and_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    this.response_message = data;
+},
+// data_convert_for_localforage(data) {
+//     const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3'])), R.groupBy(R.prop('dups_content_group_id'), data));
+//     return [R.values(contentGroups).flat(), 0, new Date().toLocaleString()];
+// },
+async fetched_data_localforage(DUPS_PARENT_ID){
+    const INDEX_STRING = (DUPS_PARENT_ID).toString();
+    this.refresh_save_data();
+
+    // <li v-for="(item, index) in all_save">
+    //     <button @click="save_data_set(index)">save_data_set</button>
+    //     {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+    //     <p>{{ item }}</p>
+    //     <button @click="save_data_delete(index)">save_data_delete</button>
+    // </li>
+    
+    const SAVE_DATA = 
+        this.response_message[DUPS_PARENT_ID]
+            .map((dups, index) => {
+                return [
+                    // dups_content_group_id: dups_content_group.dups_content_group_id,
+                    dups[0],
+                    dups[1],
+                    dups[2],
+                    // likes_count: dups_content_group.likes_count,
+                    // index: index,
+                ];
+            });
+    this.all_save.push(
+        [SAVE_DATA, 0, new Date().toLocaleString()]
+    );
+    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+},
+async fetch_like_dups_parent(DUPS_PARENT_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            dups_parent_id: DUPS_PARENT_ID,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await this.fetch_read_dups_parent();
+},
+async fetch_delete_like_dups_parent(DUPS_PARENT_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            dups_parent_id: DUPS_PARENT_ID,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await this.fetch_read_dups_parent();
+},
+async fetch_add_tag(DUPS_PARENT_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/add_tag', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            // tag: this.tag,
+            tag: this.auto_complete_tags_cunrrent_tag,
+            dups_parent_id: DUPS_PARENT_ID,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await this.fetch_read_dups_parent();
+},
+async fetch_read_all_tags(){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/read_all_tags', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    this.all_tags = data.tags;
+},
+async fetch_search_tag(){ // search_tagはauto_complete_tagsとauto_complete_tags_cunrrent_tagを更新する
+    this.auto_complete_tags = [];
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/get_tags_for_autocomplete', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            tag: this.auto_complete_tags_cunrrent_tag,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    const get_tags_ary = (tags) => tags.map(tag => tag.tag);
+    this.auto_complete_tags = get_tags_ary(data.tags);
+},
+async fetch_add_comment(DUPS_PARENT_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/add_comment', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            dups_parent_id: DUPS_PARENT_ID,
+            comment: this.comment,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    this.comment = '';
+    await this.fetch_read_dups_parent();
+},
+async fetch_delete_comment(COMMENT_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_comment', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            comment_id: COMMENT_ID,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await this.fetch_read_dups_parent();
+},
+async fetch_add_comment_reply(COMMENT_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/add_comment_reply', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            comment_id: COMMENT_ID,
+            reply: this.reply,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await this.fetch_read_dups_parent();
+},
+async fetch_delete_comment_reply(COMMENT_REPLY_ID){
+    const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/delete_comment_reply', {method: 'POST',headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            name: this.name,
+            password: this.password,
+            comment_reply_id: COMMENT_REPLY_ID,
+        }),
+    });
+    const data = await res.json(); console.log(data);
+    await this.fetch_read_dups_parent();
+},
+
+
+
+async fetch_hello_world(){
+    const res = await fetch(
+        this.get_domain_and_port_of_test_mode_or_product_mode()
+    );
+    const data = await res.json(); console.log(data);
+    // await this.fetch_read_dups_parent();
+},
+
+
+}}).mount('.app');
+
+
+function limitDataSize(data, MAX_BYTE_SIZE) {
+  const serializedData = JSON.stringify(data);
+  if (serializedData.length <= MAX_BYTE_SIZE) {
+    return data;
+  }
+  const change_kb_mb_gb = (BYTE_SIZE) => MAX_BYTE_SIZE / 1000 / 1000 / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 / 1000 / 1000 + 'GB' : MAX_BYTE_SIZE / 1000 / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 / 1000 + 'MB' : MAX_BYTE_SIZE / 1000 >= 1 ? MAX_BYTE_SIZE / 1000 + 'KB' : MAX_BYTE_SIZE + 'B';
+  throw new Error('データサイズが上限を超えました: '+ change_kb_mb_gb(MAX_BYTE_SIZE));
+};
+
+
+</script>
+</html>

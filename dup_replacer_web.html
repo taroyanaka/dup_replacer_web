@@ -10,7 +10,7 @@
         手に余る!!!!!!!!ムリ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      -->
 <script src="./lib/vue@3.2.36.global.prod.js"></script>
-<script src="./lib/localforage@1.10.0.js"></script>
+<!-- <script src="./lib/localforage@1.10.0.js"></script> -->
 <script src="./lib/ramda.@0.28.0.js"></script>
 <link rel="stylesheet" href="./lib/reset.css">
 <style>
@@ -21,7 +21,7 @@ grid-gap: 0px;
 grid-template-areas:
     "button_parent button_parent"
     "textarea_parent textarea_parent"
-    "list_parent web_data_parent"
+    "web_data_parent web_data_parent"
     ;
     width: 100vw;
 }
@@ -33,10 +33,6 @@ grid-template-areas:
 .textarea_parent{
     grid-area: textarea_parent;
     width: 100vw;
-}
-.list_parent{
-    grid-area: list_parent;
-    width: 50vw;
 }
 .web_data_parent{
     grid-area: web_data_parent;
@@ -73,7 +69,6 @@ grid-template-areas:
 <div class="app">
 
 <div class="button_parent">
-    <input type="button" value="save_data_to_all_save" @click="save_data_to_all_save">
     <input type="checkbox" id="check" v-model="in_reference_to_INDEX_0_apply_check">
 </div>
 
@@ -89,19 +84,6 @@ grid-template-areas:
     <button @click="a_copy_to_clipboard_button_with_a_message_conveying_that_browser_vendor_politics_suck">all_result Copy to Clipboard</button>
 </div>
 
-<div class="list_parent">
-    <div><input type="button" value="sort_by_when" @click="sort_by_when"></div>
-    <div><input type="button" value="sort_by_rating" @click="sort_by_rating"></div>
-    <div><input type="text" name="filter_by_text" class="filter_by_text" @input="filter_by_text" v-model="filter_text" placeholder="filter_text"></div>
-    <ul>
-        <li v-for="(item, index) in all_save">
-        <button @click="save_data_set(index)">save_data_set</button>
-        {{ item[2] }}: rating {{ item[1] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
-        <p>{{ item[0] }}</p>
-        <button @click="save_data_delete(index)">save_data_delete</button>
-        </li>
-    </ul>
-</div>
 
 <div class="web_data_parent">
 
@@ -133,8 +115,8 @@ grid-template-areas:
 <template v-for="(data, index) in response_message">
 <div>
     <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
-    <!-- fetched_data_localforage -->
-    <button @click="fetched_data_localforage(data.dups_parent_id)">fetched_data_localforage</button>
+
+
 
     <span>tag: </span><button v-for="TAGS in data.tags">{{ TAGS.tag }}</button>
 
@@ -200,7 +182,6 @@ grid-template-areas:
 </div>
 
 
-
 </div>
 </body>
 <script>
@@ -213,13 +194,6 @@ return {
     content_1: [],
     content_2: [],
     content_3: [],
-    rating: 0,
-    when: null,
-    save_data: [],
-    all_save: [],
-    sort_by: 'asc',
-    filter_text: '',
-    temporary_all_save_for_filter: [],
 
     all_result: '',
     in_reference_to_INDEX_0_apply_check: true,
@@ -254,7 +228,6 @@ watch: {
 //    },
 },
 mounted() {
-this.save_data_load();
 this.make_result();
 this.auto_resize();
 
@@ -305,16 +278,7 @@ switch_user(){
 //     default: break;
 //     }
 // },
-refresh_save_data() {
-    this.save_data = [
-        this.B_C_list,
-        // this.to_ary(this.B_C_list).map(V=>[V[0], V[1], V[2]]),
-        this.rating,
-        this.when,
-    ];
-},
 make_result(){
-    this.when = (new Date()).toLocaleString('en');
     JSON.parse(JSON.stringify(this.B_C_list)).map((B_C)=>{
         let tmp = B_C[0];
         R.zip(
@@ -325,46 +289,8 @@ make_result(){
     }).forEach((item, index)=>this.B_C_list[index][3] = item);
     this.all_result = this.B_C_list.map((item)=>item[3]).join("\n");
 },
-async rating_up(INDEX){
-    this.all_save[INDEX][1]++;
-    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
-},
-async rating_down(INDEX){
-    this.all_save[INDEX][1]--;
-    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
-},
-async save_data_to_all_save(){
-    this.refresh_save_data();
-    this.all_save.push(R.clone(this.save_data));
-    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
-},
-async save_data_load() {
-    this.all_save = JSON.parse(await localforage.getItem('dup_replacer_web')) || [];
-    this.temporary_all_save_for_filter = this.all_save;
-},
-save_data_set(index) {
-  [this.B_C_list, this.rating, this.when] = this.all_save[index];
-},
-async save_data_delete(INDEX){
-    if (window.confirm("Do you really want to delete??🦖\n本当に削除する？?🦕")) {
-        this.all_save.splice(INDEX, 1);
-        await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
-    }
-},
-sort_by_when() {
-  this.all_save.sort((a, b) => this.sort_by === 'asc' ? new Date(a[2]) - new Date(b[2]) : new Date(b[2]) - new Date(a[2]));
-  this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
-},
-sort_by_rating() {
-  this.all_save.sort((a, b) => this.sort_by === 'asc' ? a[1] - b[1] : b[1] - a[1]);
-  this.sort_by = this.sort_by === 'asc' ? 'desc' : 'asc';
-},
-filter_by_text(){
-    this.all_save = this.temporary_all_save_for_filter.filter(VAL => {
-        return VAL.join("").includes(this.filter_text);
-    });
-    this.filter_text === "" ? this.all_save = this.temporary_all_save_for_filter : null;
-},
+
+
 auto_resize(){
     document.querySelectorAll('textarea').forEach(textarea=>{
         // textarea.style.height = 'auto';
@@ -468,21 +394,9 @@ async fetch_delete_all_dups_and_dups_parent(){
     const data = await res.json(); console.log(data);
     this.response_message = data;
 },
-// data_convert_for_localforage(data) {
-//     const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3'])), R.groupBy(R.prop('dups_content_group_id'), data));
-//     return [R.values(contentGroups).flat(), 0, new Date().toLocaleString()];
-// },
-async fetched_data_localforage(DUPS_PARENT_ID){
-    const INDEX_STRING = (DUPS_PARENT_ID).toString();
-    this.refresh_save_data();
 
-    // <li v-for="(item, index) in all_save">
-    //     <button @click="save_data_set(index)">save_data_set</button>
-    //     {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
-    //     <p>{{ item }}</p>
-    //     <button @click="save_data_delete(index)">save_data_delete</button>
-    // </li>
-    
+async fetched_data_set_to_textarea(DUPS_PARENT_ID){
+    const INDEX_STRING = (DUPS_PARENT_ID).toString();
     const SAVE_DATA = 
         this.response_message[DUPS_PARENT_ID]
             .map((dups, index) => {
@@ -495,10 +409,7 @@ async fetched_data_localforage(DUPS_PARENT_ID){
                     // index: index,
                 ];
             });
-    this.all_save.push(
-        [SAVE_DATA, 0, new Date().toLocaleString()]
-    );
-    await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
+
 },
 async fetch_like_dups_parent(DUPS_PARENT_ID){
     const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
