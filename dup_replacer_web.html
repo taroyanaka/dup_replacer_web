@@ -5,6 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dup_replacer</title>
+    <!-- 
+        localforage無しの設計に変更する!!!!!!!!!!!!!!!!
+        手に余る!!!!!!!!ムリ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     -->
 <script src="./lib/vue@3.2.36.global.prod.js"></script>
 <script src="./lib/localforage@1.10.0.js"></script>
 <script src="./lib/ramda.@0.28.0.js"></script>
@@ -92,8 +96,8 @@ grid-template-areas:
     <ul>
         <li v-for="(item, index) in all_save">
         <button @click="save_data_set(index)">save_data_set</button>
-        {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
-        <p>{{ item }}</p>
+        {{ item[2] }}: rating {{ item[1] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+        <p>{{ item[0] }}</p>
         <button @click="save_data_delete(index)">save_data_delete</button>
         </li>
     </ul>
@@ -129,6 +133,8 @@ grid-template-areas:
 <template v-for="(data, index) in response_message">
 <div>
     <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
+    <!-- fetched_data_localforage -->
+    <button @click="fetched_data_localforage(data.dups_parent_id)">fetched_data_localforage</button>
 
     <span>tag: </span><button v-for="TAGS in data.tags">{{ TAGS.tag }}</button>
 
@@ -233,8 +239,8 @@ return {
 
     test_mode_domain_and_port: 'http://localhost:8000',
     product_mode_domain_and_port: 'https://night-cherry-liquid.glitch.me',
-    // test_mode_or_product_mode: 'test_mode',
-    test_mode_or_product_mode: 'product_mode',
+    test_mode_or_product_mode: 'test_mode',
+    // test_mode_or_product_mode: 'product_mode',
 
 }
 },
@@ -462,15 +468,35 @@ async fetch_delete_all_dups_and_dups_parent(){
     const data = await res.json(); console.log(data);
     this.response_message = data;
 },
-data_convert_for_localforage(data) {
-    const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3'])), R.groupBy(R.prop('dups_content_group_id'), data));
-    return [R.values(contentGroups).flat(), 0, new Date().toLocaleString()];
-},
-async fetched_data_localforage(INDEX){
-    const INDEX_STRING = (INDEX).toString();
+// data_convert_for_localforage(data) {
+//     const contentGroups = R.map(R.map(R.props(['dups_content_1', 'dups_content_2', 'dups_content_3'])), R.groupBy(R.prop('dups_content_group_id'), data));
+//     return [R.values(contentGroups).flat(), 0, new Date().toLocaleString()];
+// },
+async fetched_data_localforage(DUPS_PARENT_ID){
+    const INDEX_STRING = (DUPS_PARENT_ID).toString();
     this.refresh_save_data();
+
+    // <li v-for="(item, index) in all_save">
+    //     <button @click="save_data_set(index)">save_data_set</button>
+    //     {{ item[4] }}: rating {{ item[3] }} <button @click="rating_up(index)">🔼</button><button @click="rating_down(index)">🔽</button>
+    //     <p>{{ item }}</p>
+    //     <button @click="save_data_delete(index)">save_data_delete</button>
+    // </li>
+    
+    const SAVE_DATA = 
+        this.response_message[DUPS_PARENT_ID]
+            .map((dups, index) => {
+                return [
+                    // dups_content_group_id: dups_content_group.dups_content_group_id,
+                    dups[0],
+                    dups[1],
+                    dups[2],
+                    // likes_count: dups_content_group.likes_count,
+                    // index: index,
+                ];
+            });
     this.all_save.push(
-        this.data_convert_for_localforage(this.to_ary(this.response_message)[INDEX_STRING])
+        [SAVE_DATA, 0, new Date().toLocaleString()]
     );
     await localforage.setItem('dup_replacer_web', JSON.stringify(this.all_save));
 },

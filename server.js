@@ -118,6 +118,7 @@
 // INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (1, 'GUEST', 'GUEST_PASS', DATETIME('now'), DATETIME('now'));
 // INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'name1', 'password1', DATETIME('now'), DATETIME('now'));
 // INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'name2', 'password2', DATETIME('now'), DATETIME('now'));
+// INSERT INTO users (user_permission_id, username, userpassword, created_at, updated_at) VALUES (2, 'pro1', 'pro_pass1', DATETIME('now'), DATETIME('now'));
 
 // -- likesにデータを3レコード挿入する
 // -- INSERT INTO likes (dups_parent_id, user_id, created_at, updated_at) VALUES (1, 1, DATETIME('now'), DATETIME('now'));
@@ -137,31 +138,67 @@ const port = 8000;
 app.listen(port, "0.0.0.0", () => console.log(`App listening!! at http://localhost:${port}`) );
 // app.listen(port, () => console.log(`App listening!! at http://localhost:${port}`) );
 app.get('/', (req, res) => {
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(1);
     console.log('Hello World, this is the TEST mode!!!!');
     console.log(JSON.stringify(user).length);
     res.json({message: 'Hello World, this is the TEST mode!!!!'});
 });
 
 const now = () => new Date().toISOString();
-const true_if_within_4000_characters_and_not_empty = (str) => str.length > 2 && str.length <= 4000 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
+const true_if_within_60000_characters_and_not_empty = (str) => str.length > 2 && str.length <= 60000 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
 const true_if_within_10_characters_and_not_empty = (str) => str.length > 2 && str.length <= 10 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false;
 // validationの関数。falsyでは無い1文字以上10文字以下で記号を含まない場合はtrue、そうではない場合はfalse
 const true_if_within_10_characters_and_not_empty_and_not_include_symbol = (str) => str.length >= 1  && str.length <= 10 && typeof str === 'string' && str !== 'undefined' ? true : false && str !== 'null' ? true : false && !str.match(/[^A-Za-z0-9]/) ? true : false;
 
 // expressの一般的なエラーのレスポンス。引数としてエラー文字列を含めて呼び出す
 const error_response = (res, error_message) => res.json({error: error_message});
-const get_user_with_permission = (REQ) => db.prepare(`
-SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
-user_permission.deletable AS deletable,
-user_permission.writable AS writable,
-user_permission.readable AS readable,
-user_permission.likable AS likable,
-user_permission.commentable AS commentable
-FROM users
-LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
-WHERE users.username = ? AND users.userpassword = ?
-`).get(REQ.body.name, REQ.body.password);
+const get_user_with_permission = (REQ) => {
+    // overwrite_password関数はID/PASSWORDの秘匿化のための応急処置として使用する
+    // glitch.comにおいてpravateな情報を扱う場合は、.dataフォルダに格納する
+    // REQ.body.nameがlines[0]と一致し、
+    // REQ.body.passwordがlines[2]と一致する場合に
+    // REQ.body.passwordをlines[1]に書き換える関数
+    // overwrite_passwordを一行関数で
+    const overwrite_password = (REQ) => {
+        const FILE_NAME = './.data/for_overwriting_id_password.csv';
+        // csvファイルを読み込んで','でsplitしてconsole.logする
+        const fs = require('fs');
+        const line = fs.readFileSync(FILE_NAME, 'utf8').split(',');
+        console.log('line');
+        console.log(line);
+        console.log('line[1]');
+        console.log(line[1]);
+        console.log('line[2]');
+        console.log(line[2]);
+        console.log('REQ.body.name, REQ.body.password');
+        console.log(REQ.body.name, REQ.body.password);
+        const result = REQ.body.name === 'pro1' && REQ.body.password === line[2] ? line[1] : 'ERROR_PASSWORD';
+        return [REQ.body.name, result];
+    };
+
+    console.log(REQ.body.name, REQ.body.password);
+    let NAME = '';
+    let PASSWORD = '';
+    [NAME, PASSWORD] = [REQ.body.name, REQ.body.password];
+    // 本番環境においてはoverwrite_passwordを実行
+    // if(REQ.body.name === 'pro1'){
+    //     [NAME, PASSWORD] = overwrite_password(REQ);
+    // }
+    console.log(NAME, PASSWORD);
+
+
+    return db.prepare(`
+    SELECT users.id AS user_id, users.username AS username, user_permission.permission AS user_permission,
+    user_permission.deletable AS deletable,
+    user_permission.writable AS writable,
+    user_permission.readable AS readable,
+    user_permission.likable AS likable,
+    user_permission.commentable AS commentable
+    FROM users
+    LEFT JOIN user_permission ON users.user_permission_id = user_permission.id
+    WHERE users.username = ? AND users.userpassword = ?`
+    // ).get(REQ.body.name, REQ.body.password)
+    ).get(NAME, PASSWORD);
+};
 
 // '/read_dups_parent2'というGETのリクエストを受け取るエンドポイントで、dups_parentとそれに付随するdupsとそれを紐づけるuserを取得する。
 // それらの全てのidとcontent1とcontent2とcontent3を返すとcreated_atとupdated_atとuserのnameを返す
@@ -300,7 +337,7 @@ console.log(
 app.post('/insert_dup', (req, res) => {
     try {
     req.body.B_C_list.forEach((EACH_CONTENT) => {
-        true_if_within_4000_characters_and_not_empty(EACH_CONTENT.join("")) ? null : (()=>{throw new Error('4000文字以内で入力して')})();
+        true_if_within_60000_characters_and_not_empty(EACH_CONTENT.join("")) ? null : (()=>{throw new Error('60000文字以内で入力して')})();
     });
     const user_with_permission = get_user_with_permission(req);
     user_with_permission ? null : (()=>{throw new Error('ユーザーが存在しません')})();
