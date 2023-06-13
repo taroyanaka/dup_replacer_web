@@ -398,17 +398,18 @@ async fetch_delete_all_dups_and_dups_parent(){
 },
 
 async fetched_data_set_to_textarea(DUPS_PARENT_ID){
-    console.log(DUPS_PARENT_ID);
-    this.to_ary(this.response_message).filter(V=>V['dups_parent_id'] === DUPS_PARENT_ID)[0]['dups']
-        .forEach((DUP, INDEX) => {
-            // B_C_listにINDEXがなければ追加
-            if(this.B_C_list[INDEX] === undefined){
-                this.B_C_list.push([]);
-            }
-            this.B_C_list[INDEX][0] = DUP.dups_content_1;
-            this.B_C_list[INDEX][1] = DUP.dups_content_2;
-            this.B_C_list[INDEX][2] = DUP.dups_content_3;
-        });
+    // console.log(DUPS_PARENT_ID);
+    this.to_ary(this.response_message)
+        .filter(V=>V['dups_parent_id'] === DUPS_PARENT_ID)[0]['dups']
+            .forEach((DUP, INDEX) => {
+                // B_C_listにINDEXがなければ追加
+                if(this.B_C_list[INDEX] === undefined){
+                    this.B_C_list.push([]);
+                }
+                this.B_C_list[INDEX][0] = DUP.dups_content_1;
+                this.B_C_list[INDEX][1] = DUP.dups_content_2;
+                this.B_C_list[INDEX][2] = DUP.dups_content_3;
+            });
 },
 async fetch_like_dups_parent(DUPS_PARENT_ID){
     const res = await fetch(this.get_domain_and_port_of_test_mode_or_product_mode() + '/like_dups_parent', {method: 'POST',headers: {'Content-Type': 'application/json',},
