@@ -115,8 +115,8 @@ grid-template-areas:
 <template v-for="(data, index) in response_message">
 <div>
     <h2>dups_parent_id: {{ data.dups_parent_id }}</h2>
-
-
+    <!-- fetched_data_set_to_textarea -->
+    <button @click="fetched_data_set_to_textarea(data.dups_parent_id)">fetched_data_set_to_textarea</button>
 
     <span>tag: </span><button v-for="TAGS in data.tags">{{ TAGS.tag }}</button>
 
@@ -197,8 +197,10 @@ return {
 
     all_result: '',
     in_reference_to_INDEX_0_apply_check: true,
-    name: 'name1',
-    password: 'password1',
+    // name: 'name1',
+    name: 'user1',
+    // password: 'password1',
+    password: 'user_pass1',
     response_message: '',
     tag: '',
     // tags: ['taro', 'a'],
@@ -396,19 +398,30 @@ async fetch_delete_all_dups_and_dups_parent(){
 },
 
 async fetched_data_set_to_textarea(DUPS_PARENT_ID){
-    const INDEX_STRING = (DUPS_PARENT_ID).toString();
-    const SAVE_DATA = 
-        this.response_message[DUPS_PARENT_ID]
-            .map((dups, index) => {
-                return [
-                    // dups_content_group_id: dups_content_group.dups_content_group_id,
-                    dups[0],
-                    dups[1],
-                    dups[2],
-                    // likes_count: dups_content_group.likes_count,
-                    // index: index,
-                ];
-            });
+    // app.B_C_list
+    // app.response_message[0].dups
+    console.log(DUPS_PARENT_ID);
+
+    
+    // app.response_message[DUPS_PARENT_ID].dups.forEach(VAL, INDEX => {
+    // app.to_ary(app.response_message).filter(V=>V['dups_parent_id'] === 2)[0]['dups']
+    this.to_ary(this.response_message).filter(V=>V['dups_parent_id'] === DUPS_PARENT_ID)[0]['dups']
+        .forEach((DUP, INDEX) => {
+            // console.log(DUP);
+            // console.log(INDEX);
+            // B_C_listにINDEXがなければ追加
+            if(this.B_C_list[INDEX] === undefined){
+                this.B_C_list.push([]);
+            }
+
+            this.B_C_list[INDEX][0] = DUP.dups_content_1;
+            this.B_C_list[INDEX][1] = DUP.dups_content_2;
+            this.B_C_list[INDEX][2] = DUP.dups_content_3;
+
+        // app.B_C_list[INDEX][0] = app.response_message[DUPS_PARENT_ID].dups['dups_content_1']
+        // app.B_C_list[INDEX][1] = app.response_message[DUPS_PARENT_ID].dups['dups_content_2']
+        // app.B_C_list[INDEX][2] = app.response_message[DUPS_PARENT_ID].dups['dups_content_3']
+        });
 
 },
 async fetch_like_dups_parent(DUPS_PARENT_ID){
