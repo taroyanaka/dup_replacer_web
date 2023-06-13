@@ -148,6 +148,8 @@ grid-template-areas:
 
     <!-- <div v-for="(parent, index) in data" :key="index"> -->
         <!-- content_group_id: {{ parent.dups_content_group_id }} -->
+    <details data-dropdown>
+        <summary>open_data_save_load</summary>
       <ul style="margin-left: 2rem;">
         <li v-for="(dup, index) in data['dups']" :key="index">
             {{ dup.dups_content_1 }}
@@ -156,6 +158,8 @@ grid-template-areas:
             {{ dup.dups_content_4 }}
         </li>
       </ul>
+    </details>
+    
     <!-- </div> -->
 
     <ul style="margin-left: 4rem;">
